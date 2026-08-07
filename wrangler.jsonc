@@ -1,0 +1,42 @@
+// Configuração do Worker — servidor MCP UNESCO UIS (Fase 2 do projeto ilostat;
+// decisão do decisor de 07/08/2026: um servidor por fonte).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "uis-mcp-server",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+
+  // Domínio próprio (padrão das URLs do portfólio). Hostname também listado em
+  // SERVER_CONFIG.extraAllowedHostnames — o createMcpHandler valida o header Host.
+  "routes": [{ "pattern": "uis.sidneybissoli.com", "custom_domain": true }],
+
+  "vars": {
+    "ALLOWED_ORIGIN": "*"
+  },
+
+  // Cache UIS: release corrente (/versions/default, TTL 24 h) — fonte do
+  // data_vintage e da pinagem de `version` em toda consulta de dados.
+  "kv_namespaces": [
+    { "binding": "UIS_CACHE", "id": "f8120c913832484e936fc5c7c4d31757" }
+  ],
+
+  // Catálogo UIS (~5.060 indicadores + 462 geo units, medições docs/06) — busca
+  // 100% local, sem chamada ao upstream. Seed: scripts/seed-uis-catalog.mjs.
+  "d1_databases": [
+    { "binding": "CATALOG_DB", "database_name": "uis-catalog", "database_id": "712e9387-8b12-4358-a88d-2605a489def1" }
+  ],
+
+  // Estatísticas de uso — Durable Object singleton com storage SQLite (src/usage.ts).
+  "durable_objects": {
+    "bindings": [{ "name": "USAGE", "class_name": "UsageTracker" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["UsageTracker"] }],
+
+  // Metadados do último deploy (id/tag/timestamp) — expostos em GET /status.
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
+
+  // Logs estruturados no painel da Cloudflare (Workers Logs).
+  "observability": { "enabled": true }
+}
