@@ -108,3 +108,7 @@ produção (`evals/e2e/validacao-respostas.md`). Rodada de 07/08/2026 (Sonnet):
 `/` landing · `/health` liveness · `/status` versão+deploy · `/metrics` uso agregado ·
 `/mcp` MCP Streamable HTTP. Auth Bearer opcional (`wrangler secret put API_KEY`);
 rate limit token-bucket por IP.
+
+## Privacidade
+
+Política de privacidade do serviço hospedado: [PRIVACY.md](PRIVACY.md).
