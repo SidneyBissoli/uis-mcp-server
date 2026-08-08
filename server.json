@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.SidneyBissoli/uis-mcp-server",
+  "title": "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
+  "description": "UNESCO UIS statistics (education, science, culture) with full provenance and fixed releases.",
+  "repository": {
+    "url": "https://github.com/SidneyBissoli/uis-mcp-server",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://uis.sidneybissoli.com/mcp"
+    }
+  ]
+}

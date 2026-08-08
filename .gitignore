@@ -5,3 +5,5 @@ node_modules/
 scripts/seed-uis-catalog.sql
 
 .env
+
+.mcpregistry_github_token
