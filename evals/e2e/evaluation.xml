@@ -1,0 +1,42 @@
+<evaluation>
+   <qa_pair>
+      <question>The UIS publishes an indicator measuring the percentage of persons in cultural employment. Considering every country with data for the year 2015, which country recorded the highest share? Answer with the country name in English.</question>
+      <answer>Togo</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>According to UIS data, in which year did Brazil's adult literacy rate (population 15+ years, both sexes) first exceed 93%? Answer with the year in YYYY format.</question>
+      <answer>2017</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>Among Portugal, Spain and Italy, which country devoted the largest share of its GDP to research and experimental development (GERD) in 2018 according to UIS? Answer with the country name in English.</question>
+      <answer>Italy</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>Among Germany, Japan and the Republic of Korea, which country had the most researchers per million inhabitants (full-time equivalent) in 2019 according to UIS? Answer with the 3-letter geo unit code only.</question>
+      <answer>KOR</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>Considering UIS annual data from 2012 to 2020, in which year did Brazil record its lowest out-of-school rate for children of primary school age (both sexes)? Answer with the year in YYYY format.</question>
+      <answer>2019</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>Among Argentina, Brazil and Colombia, which country had the highest modelled primary completion rate in 2018 according to UIS? Answer with the country name in English.</question>
+      <answer>Argentina</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>What was Brazil's adult literacy rate (population 15+ years, both sexes) in 2018 according to UIS? Answer with the number only, rounded to one decimal place, without a percent sign.</question>
+      <answer>93.2</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>What was Portugal's GERD as a percentage of GDP in 2018 according to UIS? Answer with the number only, rounded to two decimal places.</question>
+      <answer>1.35</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>What was Brazil's modelled primary completion rate in 2018 according to UIS? Answer with the number only, rounded to one decimal place, without a percent sign.</question>
+      <answer>89.8</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>How many researchers per million inhabitants (full-time equivalent) did the Republic of Korea have in 2019 according to UIS? Answer with the number only, rounded to the nearest whole number.</question>
+      <answer>8329</answer>
+   </qa_pair>
+</evaluation>

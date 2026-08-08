@@ -73,11 +73,35 @@ npm run deploy
 node scripts/smoke-mcp.mjs      # smoke do MCP em produção (initialize → 3 tools → erros)
 ```
 
+## Refresh do seed (D1) — decisão da Sessão 07 (07/08/2026)
+
+Estratégia: **seed manual a cada data release da UIS; sem cron do Worker.** As
+consultas de `uis_get_data` seguem a release *default* re-resolvida com KV TTL 24 h
+(quando a UIS publica release nova, os dados migram sozinhos em ≤24 h); o que fica
+defasado é o catálogo em D1 (disponibilidade, contagens, anos por indicador),
+seedado da release corrente (`20260507-91260335`). A proveniência do catálogo expõe
+o `retrieved_at` REAL do seed — staleness explícita, não silenciosa.
+
+- **Gatilho de re-seed**: release default ≠ release do seed (a UIS publica ~2–3
+  releases/ano; o smoke em produção imprime a release corrente da Data API —
+  divergência = re-seedar). Procedimento: os 3 comandos de seed em "Desenvolvimento".
+- **Cron rejeitado por ora**: 2–3 eventos/ano não justificam código/estado extra;
+  reavaliar na Fase 3 (pós-submissão), com tráfego real — mesma janela da
+  reavaliação dos tetos operacionais.
+
 ## Evals
 
 `@sbissoli/mcp-evals`: 20 fixtures próprias em `evals/fixtures/queries.ts`, validadas
 offline em `npm test`. A rodada com modelo real (`npm run eval`) **custa API** — só
 com decisão explícita (`ANTHROPIC_API_KEY`; sem a chave, sai 0 com instruções).
+Rodada de 07/08/2026 (Sessão 07): **top-1 100% (20/20)** — `evals/results/`.
+
+**End-to-end (formato mcp-builder)**: 10 perguntas complexas com resposta única
+verificável em `evals/e2e/evaluation.xml`, respostas validadas manualmente contra a
+produção (`evals/e2e/validacao-respostas.md`). Rodada de 07/08/2026 (Sonnet):
+**10/10 (100%)** — `evals/results/2026-08-07-e2e.md`. Harness:
+`fase0-insumos/mcp-builder-evaluation/evaluation.py -t http -u https://uis.sidneybissoli.com/mcp`
+(exige as correções de compatibilidade descritas no registro de resultados).
 
 ## Rotas
 
