@@ -8,3 +8,9 @@ scripts/seed-uis-catalog.sql
 
 .mcpregistry_github_token
 .mcpregistry_registry_token
+
+# credenciais que caem no repo por engano (caminho mal escapado em comando de
+# shell gera nomes como "UsersSIDNEY.snyktoken.txt" na raiz — já aconteceu)
+*token*.txt
+*.token
+snyk.json
