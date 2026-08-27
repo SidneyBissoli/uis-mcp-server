@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "description": "Servidor MCP provenance-first para o UNESCO UIS (educação, ciência, cultura e comunicação) — Cloudflare Workers, UIS Data API, contrato de proveniência v1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SidneyBissoli/uis-mcp-server.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
