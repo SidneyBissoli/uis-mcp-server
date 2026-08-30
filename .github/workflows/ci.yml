@@ -1,0 +1,36 @@
+name: CI
+
+# O gate de código deste repositório. Até 30/08/2026 não existia: o único
+# workflow era o publish.yml, que roda em release, e os testes só apareciam lá —
+# PR nenhum era testado. O deploy-worker.yml passou a rodar a suíte, mas só em
+# push para main e só nos caminhos do Worker; este arquivo é o que cobre o PR.
+#
+# Não há passo de build: o repositório INTEIRO é o Worker, transpilado pelo
+# próprio wrangler na hora do deploy — não há `dist/` para gerar nem runtime
+# stdio para fumegar, como no irmão ilo-mcp-server. O lugar dessa garantia aqui
+# é o dry-run do wrangler, que monta o bundle de verdade e pega o que o tsc não
+# pega: import que resolve em tipo mas não resolve no bundler (foi a classe de
+# risco de mexer na árvore do SDK em 30/08/2026).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      # Sem credencial: --dry-run só monta o bundle e sai, não fala com a
+      # Cloudflare. Se o Worker não empacota, o PR fica vermelho aqui e não em
+      # produção.
+      - name: O Worker empacota (wrangler dry-run)
+        run: npx wrangler deploy --dry-run --outdir /tmp/wrangler-dry
