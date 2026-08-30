@@ -16,13 +16,14 @@
  * sobre a MENSAGEM, não sobre o conteúdo da lista, então mora na borda por onde
  * a mensagem entra: o POST do Worker (src/index.ts).
  *
- * SÓ OS MÉTODOS QUE ESTE SERVIDOR SERVE. Aqui não há resources nem prompts, e
- * para um método não registrado a resposta CERTA é `-32601` (method not found),
- * que é o que o SDK já devolve — recusar com `-32602` fingiria que o método
- * existe e só o cursor estava errado. Por isso a lista abaixo tem um item, e
- * não os quatro do irmão ilo-mcp-server. `tests/pagination.test.ts` deriva a
- * verdade do servidor REAL: se alguém registrar resources ou prompts e não
- * atualizar esta lista, o teste quebra.
+ * SÓ OS MÉTODOS QUE ESTE SERVIDOR SERVE. Aqui não há prompts, e para um método
+ * não registrado a resposta CERTA é `-32601` (method not found), que é o que o
+ * SDK já devolve — recusar com `-32602` fingiria que o método existe e só o
+ * cursor estava errado. Por isso a lista abaixo tem três itens, e não os quatro
+ * do irmão ilo-mcp-server. `tests/pagination.test.ts` deriva a verdade do
+ * servidor REAL, e foi ele que pegou a defasagem quando as resources entraram
+ * (30/08/2026): a lista tinha só `tools/list` e o teste reprovou antes de a
+ * divergência chegar ao ar.
  *
  * ENQUANTO NÃO HOUVER SEGUNDA PÁGINA. Se algum dia uma lista passar a paginar
  * de verdade, este módulo deixa de valer: a recusa passa a ser "cursor que não
@@ -34,7 +35,11 @@
 export const INVALID_PARAMS = -32602;
 
 /** Os métodos de lista paginável que ESTE servidor serve — ver o cabeçalho. */
-export const PAGINATED_LIST_METHODS = ["tools/list"] as const;
+export const PAGINATED_LIST_METHODS = [
+  "tools/list",
+  "resources/list",
+  "resources/templates/list",
+] as const;
 
 /** Resposta de erro JSON-RPC — a forma que os dois transportes enviam. */
 export interface JsonRpcErrorResponse {

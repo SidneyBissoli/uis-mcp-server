@@ -104,8 +104,12 @@ describe("unknownCursorError", () => {
   });
 
   it("não se mete com método que este servidor não serve — lá o -32601 é a resposta certa", () => {
-    expect(unknownCursorError(requisicao("resources/list", { cursor: "x" }))).toBeUndefined();
+    // `prompts/list` não está registrado: recusar o cursor fingiria que o
+    // método existe. Quando as resources entraram (30/08/2026), `resources/list`
+    // saiu desta lista e entrou na guardada — foi o teste de premissa que
+    // apontou a hora de mover.
     expect(unknownCursorError(requisicao("prompts/list", { cursor: "x" }))).toBeUndefined();
+    expect(unknownCursorError(requisicao("completion/complete", { cursor: "x" }))).toBeUndefined();
   });
 
   it("não se mete com o que não é requisição de lista", () => {

@@ -15,6 +15,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { SERVER_CONFIG } from "./config.js";
 import { announceServedVersions } from "./discover.js";
+import { registerResources } from "./resources.js";
 import { registerUisTools } from "./tools/uis.js";
 import type { Env } from "./types.js";
 import type { RecordUsage } from "./usage-core.js";
@@ -52,6 +53,7 @@ export function buildServer(env: Env, record: RecordUsage = () => {}): McpServer
   announceServedVersions(server);
 
   registerUisTools(server, env, record);
+  registerResources(server);
 
   return server;
 }

@@ -14,11 +14,20 @@ name: mcpscore (contrato de qualidade)
 #
 # HISTÓRICO DO PISO
 #  - 30/08/2026: fechados websiteUrl e ícone no handshake e a recusa de cursor
-#    inválido. Produção mediu 122/125 = 97,6% → piso 97. Restam dois achados:
-#    `server/discover` omitindo 2025-11-25, que é decisão do SDK e não tem
-#    correção nesta camada; e o `-32602` para recurso inexistente, que é
-#    sintoma de este servidor não ter superfície de resources — fechá-lo é
-#    decisão de produto, não patch de protocolo.
+#    inválido → 122/125. No mesmo dia caíram os dois que restavam:
+#    `server/discover` (src/discover.ts) e o `-32602` para recurso inexistente,
+#    que era sintoma de não haver superfície de resources — resolvido criando-a
+#    (src/resources.ts), não fingindo o código de erro.
+#
+#    O DENOMINADOR MUDOU JUNTO, e é a parte que engana: registrar resources
+#    tirou 27 regras da lista de puladas, então o total foi de 125 para 152.
+#    Comparar 122/125 com 152/152 como se fosse a mesma prova seria erro — a
+#    segunda cobre superfície que a primeira nem media. Produção: 152/152.
+#
+# UM PISO DE 100 É DESCONFORTÁVEL DE PROPÓSITO. Ele fica vermelho tanto numa
+# regressão nossa quanto numa REGRA NOVA do auditor que ainda não atendemos — e
+# a segunda também é notícia, não ruído: é uma exigência de conformidade que
+# passou a existir. Quem baixar este piso está decidindo não saber.
 #
 # UM JOB SÓ, e a ausência do outro é deliberada. O irmão ilo-mcp-server tem um
 # segundo job que audita o CÓDIGO DO PR pelo transporte stdio. Aqui não existe
@@ -57,4 +66,4 @@ jobs:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v5
       - name: Auditar o endpoint em produção
-        run: uvx mcpscore --fail-under 97 https://uis.sidneybissoli.com/mcp
+        run: uvx mcpscore --fail-under 100 https://uis.sidneybissoli.com/mcp
