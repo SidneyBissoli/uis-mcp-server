@@ -4,6 +4,13 @@
   "title": "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
   "description": "UNESCO UIS statistics (education, science, culture) with full provenance and fixed releases.",
   "websiteUrl": "https://uis.sidneybissoli.com",
+  "icons": [
+    {
+      "src": "https://uis.sidneybissoli.com/icon.png",
+      "mimeType": "image/png",
+      "sizes": ["512x512"]
+    }
+  ],
   "repository": {
     "url": "https://github.com/SidneyBissoli/uis-mcp-server",
     "source": "github"

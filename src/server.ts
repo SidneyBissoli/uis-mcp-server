@@ -23,7 +23,25 @@ export { withUsage } from "./usage-wrap.js";
 
 export function buildServer(env: Env, record: RecordUsage = () => {}): McpServer {
   const server = new McpServer(
-    { name: SERVER_CONFIG.name, version: SERVER_CONFIG.version, title: SERVER_CONFIG.title },
+    {
+      name: SERVER_CONFIG.name,
+      version: SERVER_CONFIG.version,
+      title: SERVER_CONFIG.title,
+      // O site do servidor no handshake — campo serverInfo.websiteUrl da
+      // 2025-11-25. Mesma URL do server.json e da homepage do package.json
+      // (tests/serverinfo-sync.test.ts prende as tres).
+      websiteUrl: SERVER_CONFIG.websiteUrl,
+      // Mesma URL declarada em server.json — tests/icon-sync.test.ts prende as
+      // duas juntas, para o handshake e os diretorios nunca mostrarem imagens
+      // diferentes.
+      icons: [
+        {
+          src: "https://uis.sidneybissoli.com/icon.png",
+          mimeType: "image/png",
+          sizes: ["512x512"],
+        },
+      ],
+    },
     { instructions: SERVER_CONFIG.instructions },
   );
 

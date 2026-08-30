@@ -9,8 +9,10 @@
 import { createMcpHandler } from "agents/mcp/server";
 import { checkAuth } from "./auth.js";
 import { SERVER_CONFIG } from "./config.js";
+import { ICON_PNG_BASE64 } from "./icon.js";
 import { landingResponse } from "./landing.js";
 import { logger } from "./logger.js";
+import { cursorRejection } from "./pagination.js";
 import { checkRateLimit } from "./rate-limit.js";
 import { buildServer } from "./server.js";
 import { buildStatus } from "./status.js";
@@ -20,11 +22,32 @@ import { createUsageRecorder, usageSnapshot, UsageTracker } from "./usage.js";
 // O runtime instancia o Durable Object a partir do export do entrypoint.
 export { UsageTracker };
 
+// Decodificado uma vez por isolate, nao por request.
+const ICON_PNG = Uint8Array.from(atob(ICON_PNG_BASE64), (c) => c.charCodeAt(0));
+
 function json(data: unknown, extraHeaders: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(data), {
     status: 200,
     headers: { "Content-Type": "application/json", ...extraHeaders },
   });
+}
+
+/**
+ * O Origin desta requisição está entre os hostnames que o servidor serve? Sem
+ * header Origin (todo cliente MCP que não é navegador) a resposta é sim.
+ *
+ * Serve só para ORDENAR as recusas — quem devolve 403 para origem estrangeira é
+ * o createMcpHandler, que valida o Origin com a própria lista. Esta função nunca
+ * libera nada: no máximo deixa de responder cedo e entrega a requisição a ele.
+ */
+function origemAceita(request: Request): boolean {
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+  try {
+    return SERVER_CONFIG.extraAllowedHostnames.includes(new URL(origin).hostname);
+  } catch {
+    return false;
+  }
 }
 
 export default {
@@ -40,6 +63,14 @@ export default {
     }
     if (url.pathname === "/status") {
       return json(buildStatus(env), { "Cache-Control": "no-store" });
+    }
+    // Icone do servidor — publico: e o que server.json declara e o que os
+    // diretorios buscam. Mesmo host do servidor, como o schema do MCP recomenda.
+    if (url.pathname === "/icon.png") {
+      return new Response(ICON_PNG, {
+        status: 200,
+        headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" },
+      });
     }
     if (url.pathname === "/metrics") {
       const snap = await usageSnapshot(env);
@@ -71,6 +102,18 @@ export default {
     }
 
     record("request", url.pathname);
+
+    // Cursor de paginação inválido → -32602 (ver src/pagination.ts: os handlers
+    // de lista do SDK ignoram o cursor). O gate de origem mantém a ordem
+    // "segurança antes de protocolo": requisição com Origin estrangeiro não
+    // recebe a recusa de protocolo aqui, cai no handler e leva a recusa dele.
+    if (url.pathname === SERVER_CONFIG.mcpRoute && request.method === "POST" && origemAceita(request)) {
+      const recusa = await cursorRejection(request, env.ALLOWED_ORIGIN || "*");
+      if (recusa) {
+        logger.info("invalid_cursor", { path: url.pathname });
+        return recusa;
+      }
+    }
 
     const handler = createMcpHandler(() => buildServer(env, record), {
       route: SERVER_CONFIG.mcpRoute,

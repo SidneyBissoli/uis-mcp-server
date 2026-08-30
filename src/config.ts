@@ -16,6 +16,14 @@ export const SERVER_CONFIG = {
   version: "0.1.0",
   /** Título de exibição (clientes MCP mostram ao usuário). */
   title: "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
+  /**
+   * Site do servidor. Declarado em TRÊS lugares que não podem discordar —
+   * `server.json` (o que o registry publica), `package.json` (homepage) e
+   * `serverInfo.websiteUrl` do handshake. Até 30/08/2026 só o manifesto
+   * declarava e o handshake calava; preso agora por
+   * tests/serverinfo-sync.test.ts.
+   */
+  websiteUrl: "https://uis.sidneybissoli.com",
   /** Uma frase: o que o servidor serve e de qual fonte. */
   description:
     "MCP server for the UNESCO Institute for Statistics (UIS) Data API: search ~5,000 " +
