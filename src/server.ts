@@ -14,6 +14,7 @@
 
 import { McpServer } from "@modelcontextprotocol/server";
 import { SERVER_CONFIG } from "./config.js";
+import { announceServedVersions } from "./discover.js";
 import { registerUisTools } from "./tools/uis.js";
 import type { Env } from "./types.js";
 import type { RecordUsage } from "./usage-core.js";
@@ -44,6 +45,11 @@ export function buildServer(env: Env, record: RecordUsage = () => {}): McpServer
     },
     { instructions: SERVER_CONFIG.instructions },
   );
+
+  // server/discover anuncia todas as revisões atendidas, não só as modernas —
+  // ver src/discover.ts. Antes das tools: se o SDK mudar por baixo, o servidor
+  // falha ao construir e não meio-construído.
+  announceServedVersions(server);
 
   registerUisTools(server, env, record);
 
