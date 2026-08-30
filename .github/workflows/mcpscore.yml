@@ -1,0 +1,60 @@
+name: mcpscore (contrato de qualidade)
+
+# O QUE ISTO GUARDA, e por que é contrato e não métrica.
+#
+# `mcpscore` é auditor determinístico (sem juiz LLM): conecta como cliente MCP
+# real e verifica conformidade de protocolo, qualidade das tools, segurança/auth
+# e prontidão para a spec 2026-07-28. É o ÚNICO dos quatro agregadores que mede
+# o SERVIDOR RODANDO — mcpindex, Glama e LobeHub leem ficha e repositório.
+# Por isso aqui ele deixa de ser número no painel e vira gate.
+#
+# CATRACA, não meta. O piso é o valor MEDIDO, arredondado para baixo: impede
+# regressão sem prometer melhora. Ao subir a nota de verdade, suba o piso na
+# mesma passada — senão a catraca protege um patamar que o servidor já não tem.
+#
+# HISTÓRICO DO PISO
+#  - 30/08/2026: fechados websiteUrl e ícone no handshake e a recusa de cursor
+#    inválido. Produção mediu 122/125 = 97,6% → piso 97. Restam dois achados:
+#    `server/discover` omitindo 2025-11-25, que é decisão do SDK e não tem
+#    correção nesta camada; e o `-32602` para recurso inexistente, que é
+#    sintoma de este servidor não ter superfície de resources — fechá-lo é
+#    decisão de produto, não patch de protocolo.
+#
+# UM JOB SÓ, e a ausência do outro é deliberada. O irmão ilo-mcp-server tem um
+# segundo job que audita o CÓDIGO DO PR pelo transporte stdio. Aqui não existe
+# stdio: o repositório inteiro é o Worker, sem `bin` e sem dist/cli.js. A
+# alternativa — subir `wrangler dev` no runner e auditar localhost — mediria a
+# coisa errada: sem `CF-Connecting-IP` todas as requisições caem no mesmo balde
+# do rate limit e o burst de 20 estoura. Medido em 30/08/2026: 8 de 46
+# requisições voltaram 429, e o auditor leu isso como três regras de segurança
+# reprovadas e dois cursores devolvendo -32603. Nada disso era o servidor.
+#
+# O GATILHO É O TÉRMINO DO DEPLOY, não o push. Este job mede o ENDPOINT, e o
+# deploy-worker.yml roda no mesmo push — em paralelo, sem ordem garantida.
+# Disparar pelo push faria a auditoria medir o código anterior e reprovar por
+# causa do relógio, não do servidor. Foi exatamente a armadilha corrigida no
+# ilo-mcp-server em 30/08/2026, e ela chega aqui já resolvida.
+#
+# Ruído aceito: enquanto os secrets da Cloudflare não estiverem cadastrados, o
+# deploy se pula sozinho mas conclui com sucesso, e esta auditoria roda assim
+# mesmo — medindo uma produção que não mudou. Passa, e não custa nada além de
+# meio minuto de runner.
+
+on:
+  workflow_run:
+    workflows: ["Deploy to Cloudflare Workers"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  remoto:
+    name: contrato no que está no ar (streamable http)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v5
+      - name: Auditar o endpoint em produção
+        run: uvx mcpscore --fail-under 97 https://uis.sidneybissoli.com/mcp
