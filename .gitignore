@@ -14,3 +14,9 @@ scripts/seed-uis-catalog.sql
 *token*.txt
 *.token
 snyk.json
+
+# Roadmap tecnico: planejamento interno, nao vai para repo publico. Mesma
+# convencao dos irmaos — ilo-mcp-server e ibge-br-mcp (.gitignore: ROADMAP.md),
+# medical-terminologies-mcp (PROGRESS.md). O painel do portfolio-monitor le o
+# arquivo LOCAL e renderiza o HTML fora do repositorio do produto.
+ROADMAP.md
