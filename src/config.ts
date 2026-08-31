@@ -96,3 +96,44 @@ export const UIS_LIMITS = {
   /** TTL do cache KV da release corrente (/versions/default — fonte do data_vintage). */
   releaseTtlSeconds: 24 * 3600,
 } as const;
+
+/**
+ * Texto da LANDING PAGE — a única superfície própria do produto, e por isso a
+ * única que responde por ele numa busca. Até 2026-08-31 a página tinha oito
+ * linhas de corpo, sem `meta description`, sem og:, sem dado estruturado e sem
+ * link para o repositório: não havia o que indexar.
+ *
+ * `lang` segue o PÚBLICO do produto, não a língua do código. O bloco
+ * `emOutroIdioma` não é rodapé de cortesia: é seção com resumo e exemplos
+ * próprios, porque é texto indexável.
+ */
+export const LANDING = {
+  lang: "en" as "pt-BR" | "en",
+  resumo:
+    "MCP server for the UNESCO Institute for Statistics: ~5,000 indicators on " +
+    "education, science, culture and communication, by country, region and year.",
+  exemplos: [
+    "“What is Brazil’s out-of-school rate for primary education?”",
+    "“Compare R&D spending as a share of GDP across South America.”",
+    "“Which UIS indicators cover adult literacy?”",
+  ] as readonly string[],
+  destaques: [
+    "The data release is pinned on every query, so the same question gives the same answer tomorrow.",
+    "Every response carries a provenance block with the full source URL and the date of extraction.",
+    "The indicator catalogue and the 462 geo units are served locally — searching costs no upstream call.",
+  ] as readonly string[],
+  repoUrl: "https://github.com/SidneyBissoli/uis-mcp-server",
+  npmUrl: "" as string,
+  docsUrl: "https://github.com/SidneyBissoli/uis-mcp-server/blob/main/README.md",
+  emOutroIdioma: {
+    lang: "pt-BR" as "pt-BR" | "en",
+    resumo:
+      "Em português: estatísticas do Instituto de Estatística da UNESCO (UIS) para o seu " +
+      "assistente de IA — educação, ciência e P&D, cultura e comunicação, por país, " +
+      "região e ano, com release fixada e procedência em toda resposta.",
+    exemplos: [
+      "“Qual a taxa de crianças fora da escola no ensino fundamental no Brasil?”",
+      "“Compare o gasto em P&D como % do PIB na América do Sul.”",
+    ] as readonly string[],
+  },
+} as const;
