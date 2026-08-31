@@ -35,6 +35,11 @@ export const SERVER_CONFIG = {
    * veem no User-Agent — precisa resolver para identificação humana + contato.
    */
   contactEmail: "sbissoli76@gmail.com",
+  /**
+   * Chave do IndexNow. É PÚBLICA por desenho: ela prova posse do domínio por
+   * estar servida em `/<chave>.txt`, então versionar aqui não é vazamento.
+   */
+  indexNowKey: "5c49d5e038a571ca81e4f21fc70bb98a",
   /** Rota do endpoint MCP (Streamable HTTP). */
   mcpRoute: "/mcp",
   /**
