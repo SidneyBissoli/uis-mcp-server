@@ -9,6 +9,9 @@
     "url": "git+https://github.com/SidneyBissoli/uis-mcp-server.git"
   },
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "version": "node scripts/sync-version.mjs && git add -u",
     "dev": "wrangler dev",
