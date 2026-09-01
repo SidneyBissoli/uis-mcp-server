@@ -1,0 +1,388 @@
+{
+  "prompts": [],
+  "resources": [
+    {
+      "description": "How to query the UNESCO UIS with this server: tool workflow, code conventions (indicator code families and suffixes, ISO alpha-3 geo units, themes), limits and reporting rules. Read once per session to save discovery calls.",
+      "mimeType": "text/markdown",
+      "name": "uis-guide",
+      "title": "UIS query guide",
+      "uri": "uis://guide"
+    },
+    {
+      "description": "Verified indicator codes for the most common questions — completion, out-of-school, enrolment, literacy, learning proficiency, education spending, R&D (SDG 9.5), heritage spending (SDG 11.4) and population — usable directly in uis_get_data.",
+      "mimeType": "text/markdown",
+      "name": "uis-key-indicators",
+      "title": "Key UIS indicators by topic",
+      "uri": "uis://reference/key-indicators"
+    },
+    {
+      "description": "Meaning of every provenance field returned with the data (source_url, data_vintage, retrieved_at, license, citation, derived) and how to cite the UIS correctly, including what CC BY-SA ShareAlike requires downstream.",
+      "mimeType": "text/markdown",
+      "name": "uis-provenance",
+      "title": "Provenance and citation contract",
+      "uri": "uis://reference/provenance"
+    }
+  ],
+  "serverName": "uis-mcp-server",
+  "toolCount": 3,
+  "tools": [
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Statistical records from the UNESCO Institute for Statistics Data API, filtered by indicator codes (from uis_search_indicators, up to 25), geo unit codes (from uis_list_geo_units) and year range. Set include_footnotes for per-record source notes. Returns raw UIS records only — it does not aggregate, convert or otherwise transform values; ILO labour statistics live in the sibling ILOSTAT MCP server. Broad queries are rejected with the record count — narrow by geo unit or years.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "end_year": {
+            "description": "Last year, e.g. 2024",
+            "maximum": 2100,
+            "minimum": 1900,
+            "type": "integer"
+          },
+          "geo_units": {
+            "description": "Geo unit codes from uis_list_geo_units (e.g. [\"BRA\",\"ARG\"]); omit for all",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "include_footnotes": {
+            "description": "Include per-record footnotes (source notes); default false",
+            "type": "boolean"
+          },
+          "indicators": {
+            "description": "Indicator codes from uis_search_indicators (e.g. [\"CR.1\"])",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 25,
+            "minItems": 1,
+            "type": "array"
+          },
+          "provenance_mode": {
+            "description": "Provenance verbosity: 'concise' (default — source, url, vintage, retrieval date, citation, license) or 'detailed' (full canonical block with dataset, dimension key and notices)",
+            "enum": [
+              "concise",
+              "detailed"
+            ],
+            "type": "string"
+          },
+          "start_year": {
+            "description": "First year, e.g. 2015",
+            "maximum": 2100,
+            "minimum": 1900,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "indicators"
+        ],
+        "type": "object"
+      },
+      "name": "uis_get_data",
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": {},
+        "properties": {
+          "attribution": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "provenance": {},
+          "rows": {
+            "items": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "rows_count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "columns",
+          "rows_count",
+          "rows",
+          "provenance",
+          "attribution"
+        ],
+        "type": "object"
+      },
+      "title": "Get UNESCO UIS data"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Valid geographic codes for uis_get_data: 462 geo units — countries (NATIONAL, ISO alpha-3 codes like BRA) and regional aggregates (REGIONAL). Filter by name/code and type. Does not return statistical values; these codes apply only to uis_get_data, not to other statistical servers.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "limit": {
+            "description": "Maximum results (default 100)",
+            "maximum": 500,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "description": "Results to skip, for pagination (default 0)",
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "provenance_mode": {
+            "description": "Provenance verbosity: 'concise' (default — source, url, vintage, retrieval date, citation, license) or 'detailed' (full canonical block with dataset, dimension key and notices)",
+            "enum": [
+              "concise",
+              "detailed"
+            ],
+            "type": "string"
+          },
+          "search": {
+            "description": "Case-insensitive filter on name, or exact code (e.g. \"BRA\")",
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": {
+            "description": "Only countries (NATIONAL) or only regional aggregates",
+            "enum": [
+              "NATIONAL",
+              "REGIONAL"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "uis_list_geo_units",
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": {},
+        "properties": {
+          "attribution": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "geo_units": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "type"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_offset": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          },
+          "provenance": {},
+          "showing": {
+            "type": "number"
+          },
+          "total_matches": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total_matches",
+          "showing",
+          "offset",
+          "has_more",
+          "geo_units",
+          "provenance",
+          "attribution"
+        ],
+        "type": "object"
+      },
+      "title": "List UNESCO UIS geo units"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Search the UNESCO Institute for Statistics catalogue of ~5,000 indicators — education, science/R&D, culture and communication — by keywords in the name or code, optionally filtered by theme. Returns indicator codes to use with uis_get_data, plus each indicator's data availability (years, record count). Searches the catalogue only — it does not return statistical values (use uis_get_data); ILO labour statistics live in the sibling ILOSTAT MCP server.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "limit": {
+            "description": "Maximum results (default 20)",
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "description": "Results to skip, for pagination (default 0)",
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "provenance_mode": {
+            "description": "Provenance verbosity: 'concise' (default — source, url, vintage, retrieval date, citation, license) or 'detailed' (full canonical block with dataset, dimension key and notices)",
+            "enum": [
+              "concise",
+              "detailed"
+            ],
+            "type": "string"
+          },
+          "query": {
+            "description": "Keywords, matched against indicator name and code (e.g. \"literacy rate youth\")",
+            "minLength": 1,
+            "type": "string"
+          },
+          "theme": {
+            "description": "Restrict to one UIS theme",
+            "enum": [
+              "EDUCATION",
+              "SCIENCE_TECHNOLOGY_INNOVATION",
+              "CULTURE",
+              "DEMOGRAPHIC_SOCIOECONOMIC"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "type": "object"
+      },
+      "name": "uis_search_indicators",
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": {},
+        "properties": {
+          "attribution": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "indicators": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "geo_types": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "last_data_update": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "name": {
+                  "type": "string"
+                },
+                "records": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "theme": {
+                  "type": "string"
+                },
+                "years": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "code",
+                "name",
+                "theme",
+                "last_data_update",
+                "records",
+                "years",
+                "geo_types"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "next_offset": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          },
+          "provenance": {},
+          "showing": {
+            "type": "number"
+          },
+          "total_matches": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total_matches",
+          "showing",
+          "offset",
+          "has_more",
+          "indicators",
+          "provenance",
+          "attribution"
+        ],
+        "type": "object"
+      },
+      "title": "Search UNESCO UIS indicators"
+    }
+  ]
+}
