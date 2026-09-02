@@ -27,4 +27,10 @@ export interface Env {
    * omite o bloco deploy quando ausente (dev local / testes).
    */
   CF_VERSION_METADATA?: { id: string; tag: string; timestamp: string };
+  /**
+   * Token temporário do claim no mcpindex.ai (`wrangler secret put
+   * MCPINDEX_CHALLENGE`), servido em /.well-known/mcpindex-challenge durante a
+   * janela de 15 min da verificação de posse. Ausente = a rota responde 404.
+   */
+  MCPINDEX_CHALLENGE?: string;
 }
