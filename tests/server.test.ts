@@ -1,13 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { McpServer } from "@modelcontextprotocol/server";
+import { Client } from "@modelcontextprotocol/client";
+import { InMemoryTransport, McpServer } from "@modelcontextprotocol/server";
+import { DEEP_RESEARCH_TOOLS } from "@sbissoli/mcp-search";
 import { buildServer, withUsage } from "../src/server.js";
-import { UIS_GET_DATA, UIS_LIST_GEO_UNITS, UIS_SEARCH_INDICATORS } from "../src/tools/uis.js";
+import { TOOL_NAMES } from "../src/tools/index.js";
 import type { UsageKind } from "../src/usage-core.js";
 
-const TOOL_NAMES = [UIS_SEARCH_INDICATORS, UIS_LIST_GEO_UNITS, UIS_GET_DATA];
+/** O `tools/list` do servidor real, pelo transporte em memória. */
+async function toolsServidas(): Promise<string[]> {
+  const server = buildServer({});
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const client = new Client({ name: "server-test", version: "0.0.0" });
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    return (await client.listTools()).tools.map((t) => t.name);
+  } finally {
+    await client.close();
+  }
+}
 
 describe("buildServer", () => {
-  it("constrói um McpServer com as 3 tools", () => {
+  it("constrói um McpServer", () => {
     expect(buildServer({})).toBeInstanceOf(McpServer);
   });
 
@@ -15,9 +28,13 @@ describe("buildServer", () => {
     for (const name of TOOL_NAMES) expect(name.length).toBeLessThanOrEqual(64);
   });
 
-  it("são exatamente as 3 tools do servidor, com prefixo de serviço uis_", () => {
-    expect(TOOL_NAMES.sort()).toEqual(["uis_get_data", "uis_list_geo_units", "uis_search_indicators"].sort());
-    for (const name of TOOL_NAMES) expect(name.startsWith("uis_")).toBe(true);
+  it("a lista declarada (src/tools/index.ts) é exatamente o que o servidor serve", async () => {
+    expect([...TOOL_NAMES].sort()).toEqual((await toolsServidas()).sort());
+  });
+
+  it("toda tool tem o prefixo de serviço uis_, salvo search/fetch (nome fixado pela OpenAI)", () => {
+    const semPrefixo = TOOL_NAMES.filter((name) => !name.startsWith("uis_"));
+    expect(semPrefixo.sort()).toEqual([...DEEP_RESEARCH_TOOLS].sort());
   });
 });
 

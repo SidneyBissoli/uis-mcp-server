@@ -51,8 +51,10 @@ export const SERVER_CONFIG = {
     "education (enrolment, completion, literacy, spending), science/R&D (SDG 9.5), culture " +
     "(SDG 11.4) and communication indicators, by country or region and year. Typical flow: " +
     "uis_search_indicators to find an indicator code, uis_list_geo_units for country/region " +
-    "codes, then uis_get_data with year filters. Do not use this server for statistics not " +
-    "published by the UIS (e.g. labour, health, trade, GDP).",
+    "codes, then uis_get_data with year filters. `search`/`fetch` implement the ChatGPT Deep " +
+    "Research contract over the same catalogue (ids `ind:<code>`) — prefer the uis_* tools when " +
+    "they are available. Do not use this server for statistics not published by the UIS (e.g. " +
+    "labour, health, trade, GDP).",
   /**
    * Hostnames aceitos no header Host. A lista SUBSTITUI os defaults do
    * createMcpHandler (localhost e *.workers.dev) — por isso inclui também o

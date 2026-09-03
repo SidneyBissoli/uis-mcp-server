@@ -119,7 +119,7 @@ export function guideMarkdown(): string {
 
   return `# Querying UNESCO UIS with this server
 
-## The three tools, in the order they are usually needed
+## The three \`uis_*\` tools, in the order they are usually needed
 
 1. \`uis_search_indicators\` — find an indicator **code** by keywords, optionally
    filtered by theme. Searches the catalogue only; it returns no statistical values.
@@ -129,6 +129,15 @@ export function guideMarkdown(): string {
 
 If you already know the codes, skip straight to step 3. The resource
 \`${KEY_INDICATORS_URI}\` lists verified codes for the most common questions.
+
+## \`search\` and \`fetch\` (ChatGPT Deep Research)
+
+Two more tools implement the OpenAI Deep Research contract: \`search\` ranks the
+whole catalogue by relevance and returns ids (\`ind:<code>\`) with the public Data
+Browser URL of each indicator; \`fetch\` reads one id — the catalogue entry plus a
+short data sample — with the same provenance block. Clients that see the
+\`uis_*\` tools should prefer them; \`search\`/\`fetch\` exist for the clients that
+only use those two names.
 
 ## Code conventions
 

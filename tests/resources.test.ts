@@ -134,9 +134,9 @@ describe("o guia diz a verdade sobre os limites", () => {
     expect(md).toContain(UIS_LIMITS.maxRecordsPerResponse.toLocaleString("en-US"));
   });
 
-  it("o guia nomeia as três tools e aponta a resource de referência", () => {
+  it("o guia nomeia as cinco tools e aponta a resource de referência", () => {
     const md = guideMarkdown();
-    for (const t of ["uis_search_indicators", "uis_list_geo_units", "uis_get_data"]) {
+    for (const t of ["uis_search_indicators", "uis_list_geo_units", "uis_get_data", "`search`", "`fetch`"]) {
       expect(md).toContain(t);
     }
     expect(md).toContain("uis://reference/key-indicators");

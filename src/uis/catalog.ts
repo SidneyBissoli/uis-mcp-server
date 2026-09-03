@@ -30,6 +30,21 @@ export interface UisIndicatorEntry {
   geo_types: string | null;
 }
 
+/**
+ * Linha completa do catálogo — a de `UisIndicatorEntry` mais o que o seed tira
+ * do UIS Data Browser (framework e grupo; ver scripts/seed-uis-catalog.mjs).
+ * Só `search`/`fetch` (Deep Research) leem estas colunas: o framework monta a
+ * URL pública do indicador e o grupo entra nas palavras-chave do índice.
+ */
+export interface UisCatalogRow extends UisIndicatorEntry {
+  framework_id: string | null;
+  group_id: string | null;
+  group_name: string | null;
+}
+
+const CATALOG_COLUMNS =
+  "code, name, theme, last_data_update, record_count, year_min, year_max, geo_types, framework_id, group_id, group_name";
+
 export interface UisGeoUnitEntry {
   id: string;
   name: string;
@@ -114,6 +129,32 @@ export async function searchUisCatalog(
   return {
     entries: rows.results ?? [],
     total: count?.n ?? 0,
+    retrievedAt: meta.retrievedAt,
+    releaseVersion: meta.releaseVersion,
+    sourceUrl: UIS_CATALOG_SOURCE_URL,
+  };
+}
+
+export interface UisCatalogListing {
+  entries: UisCatalogRow[];
+  retrievedAt: string;
+  releaseVersion: string | null;
+  sourceUrl: string;
+}
+
+/**
+ * O catálogo INTEIRO (~5.060 linhas, ~1 MB em D1) — para o índice de
+ * `search`/`fetch`, construído uma vez por isolate (src/tools/deep-research.ts).
+ * As tools `uis_*` nunca chamam isto: buscam por SQL, página a página.
+ */
+export async function listUisCatalog(env: Env): Promise<UisCatalogListing> {
+  const db = requireDb(env);
+  const [rows, meta] = await Promise.all([
+    db.prepare(`SELECT ${CATALOG_COLUMNS} FROM uis_indicators ORDER BY code`).all<UisCatalogRow>(),
+    uisMeta(db),
+  ]);
+  return {
+    entries: rows.results ?? [],
     retrievedAt: meta.retrievedAt,
     releaseVersion: meta.releaseVersion,
     sourceUrl: UIS_CATALOG_SOURCE_URL,

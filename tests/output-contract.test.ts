@@ -24,6 +24,7 @@ import { Client } from "@modelcontextprotocol/client";
 import { InMemoryTransport } from "@modelcontextprotocol/server";
 import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/server/validators/cf-worker";
 import { buildServer } from "../src/server.js";
+import { resetIndex } from "../src/tools/deep-research.js";
 import type { Env } from "../src/types.js";
 
 const validador = new CfWorkerJsonSchemaValidator();
@@ -69,12 +70,17 @@ const INDICADOR_CHEIO = {
   year_min: 2000,
   year_max: 2024,
   geo_types: "NATIONAL,REGIONAL",
+  framework_id: "UIS-SDG4Monitoring",
+  group_id: "IG-CR",
+  group_name: "Completion rate",
 };
 
 /**
  * Indicador com TODAS as colunas anuláveis do catálogo nulas — `uis_indicators`
- * declara `last_data_update`, `record_count`, `year_min`, `year_max` e
- * `geo_types` sem NOT NULL, então esta é a linha que o schema tem de admitir.
+ * declara `last_data_update`, `record_count`, `year_min`, `year_max`,
+ * `geo_types` e as três colunas do Data Browser sem NOT NULL, então esta é a
+ * linha que o schema tem de admitir. Sem `year_max`, o `fetch` de Deep Research
+ * não amostra dados (zero chamadas ao upstream).
  */
 const INDICADOR_MAGRO = {
   code: "ZZ.9",
@@ -85,6 +91,9 @@ const INDICADOR_MAGRO = {
   year_min: null,
   year_max: null,
   geo_types: null,
+  framework_id: null,
+  group_id: null,
+  group_name: null,
 };
 
 const GEO_BRA = { id: "BRA", name: "Brazil", type: "NATIONAL" };
@@ -108,15 +117,14 @@ const REGISTRO_CHEIO = {
 /** Registro como a UIS publica quando não há valor nem notas: só as chaves de eixo. */
 const REGISTRO_MAGRO = { indicatorId: "CR.1", geoUnit: "BRA", year: 2024, value: null };
 
-function stubUisFetch(dataBody: unknown): void {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input);
-      if (url.includes("/versions/default")) return new Response(JSON.stringify(RELEASE_BODY), { status: 200 });
-      return new Response(JSON.stringify(dataBody), { status: 200 });
-    }),
-  );
+function stubUisFetch(dataBody: unknown) {
+  const spy = vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("/versions/default")) return new Response(JSON.stringify(RELEASE_BODY), { status: 200 });
+    return new Response(JSON.stringify(dataBody), { status: 200 });
+  });
+  vi.stubGlobal("fetch", spy);
+  return spy;
 }
 
 // ---------------------------------------------------------------------------
@@ -199,6 +207,44 @@ const CASOS: Caso[] = [
     dados: { records: [] },
     args: { indicators: ["CR.1"], geo_units: ["XKX"] },
   },
+  // Deep Research (ChatGPT): o índice nasce da listagem do catálogo (mesmo fakeDb —
+  // qualquer `.all()` fora de uis_meta devolve as linhas) e o `fetch` amostra
+  // dados pelo mesmo stub de rede das uis_*.
+  {
+    nome: "search",
+    cobre: "busca com achado (indicador cheio e magro no índice)",
+    env: CATALOGO([INDICADOR_CHEIO, INDICADOR_MAGRO], 2),
+    dados: { records: [] },
+    args: { query: "completion rate" },
+  },
+  {
+    nome: "search",
+    cobre: "busca sem achado (results vazio)",
+    env: CATALOGO([INDICADOR_CHEIO], 1),
+    dados: { records: [] },
+    args: { query: "zzzznaoexiste" },
+  },
+  {
+    nome: "fetch",
+    cobre: "indicador cheio — documento com amostra de dados (1 chamada à Data API)",
+    env: CATALOGO([INDICADOR_CHEIO], 1),
+    dados: { records: [REGISTRO_CHEIO, REGISTRO_MAGRO] },
+    args: { id: "ind:CR.1" },
+  },
+  {
+    nome: "fetch",
+    cobre: "indicador cheio — amostra sem registro",
+    env: CATALOGO([INDICADOR_CHEIO], 1),
+    dados: { records: [] },
+    args: { id: "ind:CR.1" },
+  },
+  {
+    nome: "fetch",
+    cobre: "indicador magro — sem year_max não há amostra nem chamada ao upstream",
+    env: CATALOGO([INDICADOR_MAGRO], 1),
+    dados: { records: [] },
+    args: { id: "ind:ZZ.9" },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -224,7 +270,11 @@ afterAll(async () => {
   await clienteBase.close();
 });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  // O índice de search/fetch é de módulo (24 h): cada caso monta o seu do próprio fakeDb.
+  resetIndex();
+});
 
 describe("structuredContent obedece ao outputSchema anunciado", () => {
   it.each(CASOS.map((c) => [c.nome, c.cobre, c] as const))("%s — %s", async (nome, _cobre, caso) => {
@@ -283,6 +333,45 @@ describe("structuredContent obedece ao outputSchema anunciado", () => {
     const semCaso = tools.map((t) => t.name).filter((n) => !cobertas.has(n));
     expect(semCaso, `tools sem caso de contrato: ${semCaso.join(", ")}`).toEqual([]);
     for (const t of tools) expect(t.outputSchema, `${t.name} sem outputSchema`).toBeDefined();
-    expect(tools).toHaveLength(3);
+    expect(tools).toHaveLength(5);
+  });
+
+  /**
+   * Os dois lados do contrato Deep Research que o schema não prova: o `fetch`
+   * de id desconhecido é erro (sem tocar a rede) e o de id conhecido traz o
+   * bloco de proveniência da AMOSTRA (chamada real à Data API, release fixada)
+   * — a proveniência viaja em `structuredContent`, não no texto, que é o JSON
+   * do contrato.
+   */
+  it("fetch: id desconhecido é erro sem rede; id conhecido carrega a proveniência da amostra", async () => {
+    const fetchSpy = stubUisFetch({ records: [REGISTRO_CHEIO] });
+    const client = await conectar(CATALOGO([INDICADOR_CHEIO], 1));
+    try {
+      const desconhecido = await client.callTool({ name: "fetch", arguments: { id: "ind:NAO.EXISTE" } });
+      expect(desconhecido.isError).toBe(true);
+      expect((desconhecido.content as Array<{ text: string }>)[0]?.text).toContain("ind:NAO.EXISTE");
+      expect(fetchSpy).not.toHaveBeenCalled();
+
+      const conhecido = await client.callTool({ name: "fetch", arguments: { id: "ind:CR.1" } });
+      expect(conhecido.isError).toBeFalsy();
+      const sc = conhecido.structuredContent as {
+        id: string;
+        url: string;
+        text: string;
+        provenance: { source_url: string; data_vintage: string; citation: string; license: string };
+      };
+      expect(sc.id).toBe("ind:CR.1");
+      expect(sc.url).toBe("https://databrowser.uis.unesco.org/view#indicatorPaths=UIS-SDG4Monitoring%3A0%3ACR.1");
+      expect(sc.text).toContain("| BRA | 2024 | 97.6 |");
+      expect(sc.provenance.source_url).toContain("indicator=CR.1");
+      expect(sc.provenance.source_url).toContain("version=20260507-91260335");
+      expect(sc.provenance.data_vintage).toBe("20260507-91260335 (published 2026-05-08)"); // release da amostra, não do seed
+      expect(sc.provenance.license).toBe("CC-BY-SA-4.0"); // modo conciso: license é o id
+      expect(sc.provenance.citation).toContain("date of extraction");
+      const texto = (conhecido.content as Array<{ text: string }>)[0]!.text;
+      expect(JSON.parse(texto)).toMatchObject({ id: "ind:CR.1" }); // content = JSON do contrato, sem rodapé
+    } finally {
+      await client.close();
+    }
   });
 });

@@ -131,4 +131,16 @@ export const FIXTURES: EvalFixture[] = [
     expectedTools: ["uis_search_indicators", "uis_list_geo_units"],
     note: "Painel amplo: achar o indicador e/ou os códigos de país para filtrar.",
   },
+  {
+    id: "dr-01",
+    query: "Search the UNESCO UIS corpus for documents about adult literacy and give me the id to read one in full.",
+    expectedTools: ["search", "uis_search_indicators"],
+    note: "Pedido explícito de pesquisa no acervo com id para leitura — o search do Deep Research; uis_search_indicators é a alternativa defensável.",
+  },
+  {
+    id: "dr-02",
+    query: "Read the document with id ind:LR.AG15T99 that the search returned.",
+    expectedTools: ["fetch"],
+    note: "Id prefixado devolvido pelo search — só o fetch o resolve.",
+  },
 ];

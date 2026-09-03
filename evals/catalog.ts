@@ -5,6 +5,7 @@
 
 import { buildCatalog, type CatalogGroup, type CapturingServer } from "@sbissoli/mcp-evals";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { registerDeepResearchTools } from "../src/tools/deep-research.js";
 import { registerUisTools } from "../src/tools/uis.js";
 import type { Env } from "../src/types.js";
 
@@ -15,6 +16,7 @@ const asServer = (s: CapturingServer) => s as unknown as McpServer;
 
 const GROUPS: CatalogGroup[] = [
   { area: "uis", register: (s) => registerUisTools(asServer(s), ENV, NOOP) },
+  { area: "deep-research", register: (s) => registerDeepResearchTools(asServer(s), ENV, NOOP) },
 ];
 
 export const CATALOG = buildCatalog(GROUPS);

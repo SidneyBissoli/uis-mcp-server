@@ -19,10 +19,11 @@ name: Deploy to Cloudflare Workers
 #  - push em main nos caminhos que afetam o Worker;
 #  - workflow_dispatch, para redeploy sem mudança de código.
 #
-# SECRETS: nenhum dos dois está cadastrado neste repositório em 30/08/2026 —
-# conferido com `gh secret list`, não lido de comentário (no ilo um comentário
-# desatualizado sobre exatamente isto virou premissa errada em outro arquivo).
-# Enquanto faltarem, o job se pula sozinho e o deploy segue manual:
+# SECRETS: os dois cadastrados em 30/08/2026 (conferido com `gh secret list`
+# em 03/09/2026 — conferir sempre pelo comando, não por este comentário: no
+# ilo um comentário desatualizado sobre exatamente isto virou premissa errada
+# em outro arquivo). Se algum dia faltarem, o job se pula sozinho e o deploy
+# segue manual:
 #   CLOUDFLARE_API_TOKEN  — token com permissão "Workers Scripts: Edit"
 #   CLOUDFLARE_ACCOUNT_ID — conta em que o worker é publicado
 #

@@ -1,7 +1,14 @@
 /**
- * Smoke manual do endpoint MCP em produção (Streamable HTTP, JSON-RPC):
- * initialize → tools/list → as 3 tools uis_* com consultas reais, incluindo a
- * atribuição UIS (URL completa + data de extração) e a release fixada.
+ * Smoke do endpoint MCP em produção (Streamable HTTP, JSON-RPC) — roda também
+ * no fim do deploy (.github/workflows/deploy-worker.yml): initialize →
+ * tools/list confrontado com o que GET /status anuncia → as tools uis_* com
+ * consultas reais, incluindo a atribuição UIS (URL completa + data de extração)
+ * e a release fixada → search → fetch (Deep Research) e id desconhecido.
+ *
+ * A contagem de tools NÃO é literal: vem de /status (`tool_names`, lista de
+ * src/tools/index.ts presa ao servidor real por teste). Este repositório é
+ * worker-only — o único baseline é o de produção, então derivar a contagem do
+ * baseline seria circular.
  *
  * Uso: node scripts/smoke-mcp.mjs [base-url]
  */
@@ -42,8 +49,14 @@ console.log("initialize:", init.serverInfo, "| instructions:", (init.instruction
 await rpc("notifications/initialized", {}).catch(() => {});
 
 const tools = await rpc("tools/list", {});
-console.log("tools/list:", tools.tools.map((t) => t.name));
-if (tools.tools.length !== 3) throw new Error("esperava exatamente 3 tools uis_*");
+const servidas = tools.tools.map((t) => t.name).sort();
+console.log("tools/list:", servidas);
+const status = await (await fetch(`${BASE}/status`)).json();
+const anunciadas = [...(status.tool_names ?? [])].sort();
+if (!anunciadas.length) throw new Error("/status sem tool_names — o build no ar é anterior a 0.2.0?");
+if (JSON.stringify(servidas) !== JSON.stringify(anunciadas)) {
+  throw new Error(`tools/list ${JSON.stringify(servidas)} ≠ /status.tool_names ${JSON.stringify(anunciadas)}`);
+}
 
 const search = await rpc("tools/call", {
   name: "uis_search_indicators",
@@ -90,5 +103,31 @@ const page = await rpc("tools/call", {
   arguments: { query: "rate", limit: 5, offset: 5 },
 });
 console.log("paginação offset=5 → showing:", page.structuredContent.showing, "| has_more:", page.structuredContent.has_more, "| next_offset:", page.structuredContent.next_offset);
+
+// Deep Research: search → fetch com o 1º id devolvido, e id desconhecido.
+const t0 = Date.now();
+const found = await rpc("tools/call", { name: "search", arguments: { query: "adult literacy rate" } });
+const results = found.structuredContent?.results ?? [];
+console.log(`\nsearch "adult literacy rate" (${Date.now() - t0} ms):`, JSON.stringify(results.slice(0, 3)));
+if (found.isError || !results.length) throw new Error("search sem resultado");
+if (!results[0].id.startsWith("ind:")) throw new Error(`id de search sem prefixo ind:: ${results[0].id}`);
+if (!results[0].url.startsWith("https://databrowser.uis.unesco.org/view#indicatorPaths=")) {
+  throw new Error(`url de search não é a página pública do Data Browser: ${results[0].url}`);
+}
+if (found.structuredContent.provenance?.license !== "CC-BY-SA-4.0") throw new Error("search sem proveniência UIS");
+if (JSON.parse(found.content[0].text).results?.length !== results.length) throw new Error("content de search não é o JSON do contrato");
+
+const t1 = Date.now();
+const doc = await rpc("tools/call", { name: "fetch", arguments: { id: results[0].id } });
+const d = doc.structuredContent;
+console.log(`fetch ${results[0].id} (${Date.now() - t1} ms):`, d?.title, "| url:", d?.url);
+console.log("fetch text (head):", (d?.text ?? "").split("\n").slice(0, 6).join(" / "));
+if (doc.isError || d?.id !== results[0].id) throw new Error("fetch não devolveu o documento pedido");
+if (!d.provenance?.source_url?.includes("indicator=")) throw new Error("fetch sem proveniência da amostra (source_url da Data API)");
+if (!d.provenance.citation.includes("date of extraction")) throw new Error("fetch sem atribuição UIS");
+
+const missing = await rpc("tools/call", { name: "fetch", arguments: { id: "ind:NAO.EXISTE" } });
+console.log("fetch id desconhecido → isError:", missing.isError, "|", (missing.content?.[0]?.text ?? "").slice(0, 80));
+if (!missing.isError) throw new Error("fetch de id desconhecido deveria ser erro");
 
 console.log("\nSMOKE OK");

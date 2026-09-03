@@ -16,6 +16,7 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { SERVER_CONFIG } from "./config.js";
 import { announceServedVersions } from "./discover.js";
 import { registerResources } from "./resources.js";
+import { registerDeepResearchTools } from "./tools/deep-research.js";
 import { registerUisTools } from "./tools/uis.js";
 import type { Env } from "./types.js";
 import type { RecordUsage } from "./usage-core.js";
@@ -53,6 +54,9 @@ export function buildServer(env: Env, record: RecordUsage = () => {}): McpServer
   announceServedVersions(server);
 
   registerUisTools(server, env, record);
+  // `search`/`fetch` (ChatGPT Deep Research) — as únicas sem prefixo `uis_`;
+  // nome fixado pela OpenAI. Ver src/tools/deep-research.ts.
+  registerDeepResearchTools(server, env, record);
   registerResources(server);
 
   return server;

@@ -19,11 +19,38 @@ servido como secundário.
 | `uis_search_indicators` | busca ~5.060 indicadores (4 temas) com disponibilidade de dados; paginação por `offset` | catálogo em D1 (100% local) |
 | `uis_list_geo_units` | 462 códigos de país/região (NATIONAL/REGIONAL); paginação por `offset` | D1 (100% local) |
 | `uis_get_data` | registros por indicador/geo unit/anos, footnotes opcionais | 1 chamada à Data API por consulta (release fixada) |
+| `search` | contrato ChatGPT Deep Research: ranqueia a consulta contra o catálogo inteiro, devolve `{ id, title, url }` (`ind:<code>`) | índice em memória construído do catálogo D1 (24 h) |
+| `fetch` | contrato ChatGPT Deep Research: um indicador em Markdown legível (entrada do catálogo + amostra de dados) com a página pública do Data Browser como `url` | catálogo D1 + 1 chamada à Data API (amostra) |
 
 Toda resposta carrega o **bloco de proveniência v1.0** (`@sbissoli/mcp-provenance`,
 modos `concise`/`detailed` via parâmetro `provenance_mode`) nos três canais do
 contrato: `structuredContent`, `_meta` namespaced (`com.sidneybissoli.uis/*`) e
-rodapé de texto.
+rodapé de texto. Em `search`/`fetch` o canal de texto é o JSON do contrato
+Deep Research (sem rodapé); a proveniência viaja em `structuredContent` e `_meta`.
+
+### ChatGPT (Deep Research)
+
+O deep research do ChatGPT (e o company knowledge, e os fluxos de pesquisa da
+Responses API) só usa servidor MCP que exponha exatamente `search` e `fetch` —
+este servidor expõe, por cima das tools `uis_*`. Aponte o conector para o
+endpoint hospedado, sem chave:
+
+```
+https://uis.sidneybissoli.com/mcp
+```
+
+`search` ranqueia a consulta contra o catálogo inteiro da UIS (~5.060 indicadores
+— educação, ciência/P&D, cultura, contexto demográfico) e devolve
+`{ id, title, url }` (`ind:<code>`, ex.: `ind:ROFST.1.CP`); `fetch` devolve o
+indicador em Markdown legível — nome, tema, grupo e framework do Data Browser,
+anos disponíveis, uma amostra dos dados (Brasil e o agregado mundial dos ODS,
+últimos cinco anos; 1 chamada à Data API com release fixada) e como consultar com
+`uis_get_data` — com a página pública do UIS Data Browser como `url`
+(`https://databrowser.uis.unesco.org/view#indicatorPaths=<framework>%3A0%3A<code>`),
+que é o que o ChatGPT cita. O framework vem das definições do Data Browser,
+gravadas no catálogo pelo seed (`framework_id`, `group_id`, `group_name`). No modo
+desenvolvedor do ChatGPT (Settings → Security and login → Developer mode) qualquer
+tool é chamável — as `uis_*` continuam sendo as certas para dados.
 
 ## Decisões vinculantes (mini-spike docs/06 + decisor, 07/08/2026)
 
@@ -70,7 +97,7 @@ npx wrangler d1 execute uis-catalog --local  --file=scripts/seed-uis-catalog.sql
 npx wrangler d1 execute uis-catalog --remote --file=scripts/seed-uis-catalog.sql
 
 npm run deploy
-node scripts/smoke-mcp.mjs      # smoke do MCP em produção (initialize → 3 tools → erros)
+node scripts/smoke-mcp.mjs      # smoke do MCP em produção (initialize → tools/list == /status → uis_* → search/fetch → erros)
 ```
 
 ## Refresh do seed (D1) — decisão da Sessão 07 (07/08/2026)
@@ -91,7 +118,7 @@ o `retrieved_at` REAL do seed — staleness explícita, não silenciosa.
 
 ## Evals
 
-`@sbissoli/mcp-evals`: 20 fixtures próprias em `evals/fixtures/queries.ts`, validadas
+`@sbissoli/mcp-evals`: 22 fixtures próprias em `evals/fixtures/queries.ts`, validadas
 offline em `npm test`. A rodada com modelo real (`npm run eval`) **custa API** — só
 com decisão explícita (`ANTHROPIC_API_KEY`; sem a chave, sai 0 com instruções).
 Rodada de 07/08/2026 (Sessão 07): **top-1 100% (20/20)** — `evals/results/`.
