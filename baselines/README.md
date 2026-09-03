@@ -8,7 +8,8 @@ divergência real entre os canais stdio e HTTP.
 
 | Arquivo | Como foi capturado | O que representa |
 |:--|:--|:--|
-| `surface-http-prod-0.1.0.json` | `--url https://uis.sidneybissoli.com/mcp` | o que o endpoint hospedado serve DE FATO |
+| `surface-http-prod-0.1.0.json` | `--url https://uis.sidneybissoli.com/mcp` | o que o endpoint hospedado servia na 0.1.0 (3 tools) |
+| `surface-http-prod-0.2.0.json` | `--url https://uis.sidneybissoli.com/mcp` | o que o endpoint hospedado serve DE FATO desde 03/09/2026 (5 tools: + `search`/`fetch`) |
 
 ## O que este baseline é — e o que não é
 
@@ -18,7 +19,8 @@ no bcb (stdio × worker) NÃO existe aqui, e o script só tem o modo `--url`.
 O que o dump registra é a superfície de PRODUÇÃO no tempo: a próxima captura
 diz exatamente o que mudou, em vez de a mudança passar em silêncio.
 
-Medição da captura inicial (2026-09-01): 3 tools, 3 resources, 0 prompts —
+Medição da captura inicial (2026-09-01): 3 tools, 3 resources, 0 prompts;
+na 0.2.0 (2026-09-03): 5 tools (`search`/`fetch` do Deep Research), 3 resources, 0 prompts —
 o zero de prompts é POR DESENHO (o servidor não declara a capability; ver o
 cabeçalho de `src/pagination.ts`), não ausência a corrigir.
 
@@ -33,7 +35,7 @@ Depois de um deploy que possa mexer na superfície:
 
 ```bash
 node scripts/dump-surface.mjs --url https://uis.sidneybissoli.com/mcp > depois.json
-# diff contra baselines/surface-http-prod-0.1.0.json
+# diff contra o baselines/surface-http-prod-<versão>.json mais recente
 ```
 
 Toda diferença precisa ser deliberada e listada no CHANGELOG. A propagação da
