@@ -63,7 +63,7 @@ jobs:
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
       - name: Auditar o endpoint em produção
         run: uvx mcpscore --fail-under 100 https://uis.sidneybissoli.com/mcp
