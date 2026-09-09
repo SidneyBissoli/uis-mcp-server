@@ -1,42 +1,45 @@
-{
-  "name": "uis-mcp-server",
-  "private": true,
-  "version": "0.2.0",
-  "description": "Servidor MCP provenance-first para o UNESCO UIS (educação, ciência, cultura e comunicação) — Cloudflare Workers, UIS Data API, contrato de proveniência v1.0",
-  "homepage": "https://uis.sidneybissoli.com",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SidneyBissoli/uis-mcp-server.git"
-  },
-  "type": "module",
-  "engines": {
-    "node": ">=22"
-  },
-  "scripts": {
-    "version": "node scripts/sync-version.mjs && git add -u",
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "seed:sql": "node scripts/seed-uis-catalog.mjs",
-    "eval": "tsx evals/run.ts"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/server": "^2.0.0",
-    "@sbissoli/mcp-provenance": "^0.1.0",
-    "@sbissoli/mcp-search": "^0.3.0",
-    "agents": "^0.22.0",
-    "zod": "^4.5.4"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260904.1",
-    "@modelcontextprotocol/client": "^2.0.0",
-    "@sbissoli/mcp-evals": "^0.1.0",
-    "@types/node": "^26.4.1",
-    "tsx": "^4.23.13",
-    "typescript": "^7.0.2",
-    "vite": "^8.2.2",
-    "vitest": "^5.0.0",
-    "wrangler": "^4.129.0"
-  }
-}
+{
+  "name": "uis-mcp-server",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Servidor MCP provenance-first para o UNESCO UIS (educação, ciência, cultura e comunicação) — Cloudflare Workers, UIS Data API, contrato de proveniência v1.0",
+  "homepage": "https://uis.sidneybissoli.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SidneyBissoli/uis-mcp-server.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "version": "node scripts/sync-version.mjs && git add -u",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "seed:sql": "node scripts/seed-uis-catalog.mjs",
+    "eval": "tsx evals/run.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
+    "@sbissoli/mcp-provenance": "^0.1.0",
+    "@sbissoli/mcp-search": "^0.3.0",
+    "agents": "^0.22.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260904.1",
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@sbissoli/mcp-evals": "^0.1.0",
+    "@types/node": "^26.4.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0",
+    "wrangler": "^4.129.0"
+  },
+  "overrides": {
+    "sharp": "^0.35.4"
+  }
+}
