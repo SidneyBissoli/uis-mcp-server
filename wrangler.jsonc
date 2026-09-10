@@ -34,6 +34,13 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["UsageTracker"] }],
 
+  // Telemetria por chamada de tool, consultavel pela SQL API do Analytics
+  // Engine. O dataset e criado no primeiro writeDataPoint. Complementa o
+  // UsageTracker: ele conta, este diz de onde veio e por que falhou.
+  "analytics_engine_datasets": [
+    { "binding": "ANALYTICS", "dataset": "uis_mcp_tool_calls" }
+  ],
+
   // Metadados do último deploy (id/tag/timestamp) — expostos em GET /status.
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
 

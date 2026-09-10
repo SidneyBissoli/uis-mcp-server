@@ -23,6 +23,21 @@ export interface Env {
    */
   USAGE?: DurableObjectNamespace<UsageTracker>;
   /**
+   * Analytics Engine: uma linha por chamada de tool, com o contexto da
+   * REQUISIÇÃO que o UsageTracker não tem (país, organização do AS, uso próprio)
+   * e a FORMA da chamada (classe do erro e nomes dos parâmetros). Opcional para
+   * que dev local e testes rodem sem o binding — sem ele, `withAnalytics`
+   * devolve o registrador intacto. Ver src/analytics.ts.
+   */
+  ANALYTICS?: AnalyticsEngineDataset;
+  /**
+   * Marcador de uso próprio (`wrangler secret put SELF_MARKER`): os clientes MCP
+   * do dono mandam o header `x-mcp-self` com este valor, e é o único jeito de
+   * separar o uso do dono quando ele chega por conector hospedado, que egressa
+   * de servidores da plataforma. Ausente = nenhuma chamada é marcada.
+   */
+  SELF_MARKER?: string;
+  /**
    * Binding version_metadata (id/tag/timestamp do deploy). Opcional: GET /status
    * omite o bloco deploy quando ausente (dev local / testes).
    */

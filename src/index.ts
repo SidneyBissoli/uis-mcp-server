@@ -15,6 +15,7 @@ import { discoveryResponseForPath } from "./discovery.js";
 import { logger } from "./logger.js";
 import { cursorRejection } from "./pagination.js";
 import { checkRateLimit } from "./rate-limit.js";
+import { withAnalytics, tagRequest } from "./analytics.js";
 import { buildServer } from "./server.js";
 import { buildStatus } from "./status.js";
 import type { Env } from "./types.js";
@@ -125,6 +126,12 @@ export default {
 
     record("request", url.pathname);
 
+    // Contexto da requisicao (pais/AS/marcador self) + a FORMA da chamada,
+    // escritos no Analytics Engine pegando carona no hook de uso. Sem o binding
+    // ANALYTICS (dev local, testes) devolve o registrador intacto.
+    // Ver src/analytics.ts.
+    const recordWithAnalytics = withAnalytics(record, env.ANALYTICS, tagRequest(request, env.SELF_MARKER));
+
     // Cursor de paginação inválido → -32602 (ver src/pagination.ts: os handlers
     // de lista do SDK ignoram o cursor). O gate de origem mantém a ordem
     // "segurança antes de protocolo": requisição com Origin estrangeiro não
@@ -137,7 +144,7 @@ export default {
       }
     }
 
-    const handler = createMcpHandler(() => buildServer(env, record), {
+    const handler = createMcpHandler(() => buildServer(env, recordWithAnalytics), {
       route: SERVER_CONFIG.mcpRoute,
       // Sem a opção, o handler aceita localhost e *.workers.dev. Ao definir
       // extraAllowedHostnames (domínio próprio), a lista SUBSTITUI os defaults —
