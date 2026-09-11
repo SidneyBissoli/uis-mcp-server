@@ -238,7 +238,7 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         limit: z.number().int().min(1).max(100).optional().describe("Maximum results (default 20)"),
         offset: z.number().int().min(0).optional().describe("Results to skip, for pagination (default 0)"),
         provenance_mode: PROVENANCE_MODE_SCHEMA,
-      }),
+      }).strict(),
       outputSchema: z.looseObject({
         total_matches: z.number(),
         showing: z.number(),
@@ -278,7 +278,7 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         limit: z.number().int().min(1).max(500).optional().describe("Maximum results (default 100)"),
         offset: z.number().int().min(0).optional().describe("Results to skip, for pagination (default 0)"),
         provenance_mode: PROVENANCE_MODE_SCHEMA,
-      }),
+      }).strict(),
       outputSchema: z.looseObject({
         total_matches: z.number(),
         showing: z.number(),
@@ -319,7 +319,7 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         end_year: z.number().int().min(1900).max(2100).optional().describe("Last year, e.g. 2024"),
         include_footnotes: z.boolean().optional().describe("Include per-record footnotes (source notes); default false"),
         provenance_mode: PROVENANCE_MODE_SCHEMA,
-      }),
+      }).strict(),
       outputSchema: z.looseObject({
         columns: z.array(z.string()),
         rows_count: z.number(),

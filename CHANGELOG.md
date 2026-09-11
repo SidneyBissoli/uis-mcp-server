@@ -6,6 +6,30 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 `https://uis.sidneybissoli.com`; a superfície de cada versão está em
 `baselines/`.
 
+## [Não publicado]
+
+### Corrigido
+
+- **As tools `uis_*` recusam parâmetro que não existe.** Sem isso o zod
+  descartava a chave desconhecida em silêncio, aplicava o default do parâmetro
+  que ficou faltando e a tool respondia OUTRA pergunta com cara de resposta.
+  Medido no irmão `ibge-br-mcp` em 11/09/2026: `periodo` no singular, que o
+  esquema não tem, devolveu a população de **2026** para uma pergunta sobre
+  2023, com `p/last` na URL de procedência e nenhum aviso — um agente reporta
+  isso como o número de 2023. Resposta errada é pior que erro: erro o modelo
+  corrige na chamada seguinte, resposta errada vira número em relatório.
+  Singular/plural é o engano mais comum que existe.
+
+  A recusa vem do SDK como `Unrecognized key: "<nome>"`, que **nomeia a chave**,
+  então o modelo se corrige sozinho. **Mudança de superfície:** as três tools
+  `uis_*` publicam agora `additionalProperties: false`. `search` e `fetch`
+  ficam de fora — o contrato é da OpenAI e quem os registra é
+  `@sbissoli/mcp-search`. Guarda em `tests/output-contract.test.ts`.
+
+  Preço consciente: erro de validação de esquema é respondido pelo SDK ANTES do
+  callback, então não passa pela instrumentação e não aparece na telemetria.
+  Troca-se visibilidade por prevenção.
+
 ## [0.2.0] — 2026-09-03
 
 ### Adicionado

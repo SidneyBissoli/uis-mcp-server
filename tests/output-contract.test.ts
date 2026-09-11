@@ -337,6 +337,43 @@ describe("structuredContent obedece ao outputSchema anunciado", () => {
   });
 
   /**
+   * Parâmetro que não existe tem de ser RECUSADO, nunca descartado em silêncio.
+   *
+   * Sem `.strict()`, o zod tira a chave desconhecida, aplica o default do
+   * parâmetro que faltou e a tool responde OUTRA pergunta com cara de resposta.
+   * Medido no irmão ibge em 11/09/2026: `periodo` no singular, que o esquema
+   * não tem, devolveu a população de 2026 para uma pergunta sobre 2023, sem
+   * nenhum aviso. Resposta errada é pior que erro — erro o modelo corrige na
+   * chamada seguinte, resposta errada vira número em relatório.
+   *
+   * `search`/`fetch` ficam de fora: o contrato é da OpenAI e quem os registra é
+   * `@sbissoli/mcp-search`.
+   */
+  it("toda tool uis_* recusa parâmetro que não existe", async () => {
+    const { tools } = await clienteBase.listTools();
+    const proprias = tools.filter((t) => t.name.startsWith("uis_"));
+
+    expect(proprias.length).toBeGreaterThanOrEqual(3);
+    for (const t of proprias) {
+      const schema = t.inputSchema as { additionalProperties?: unknown };
+      expect(schema.additionalProperties, `${t.name} aceita chave desconhecida`).toBe(false);
+    }
+  });
+
+  it("a recusa NOMEIA a chave, para o modelo se corrigir sozinho", async () => {
+    const r = await clienteBase.callTool({
+      name: "uis_search_indicators",
+      arguments: { query: "literacy", limite: 5 },
+    });
+
+    expect(r.isError).toBe(true);
+    const texto = Array.isArray(r.content)
+      ? r.content.map((c) => ("text" in c ? c.text : "")).join(" ")
+      : "";
+    expect(texto).toContain("limite");
+  });
+
+  /**
    * Os dois lados do contrato Deep Research que o schema não prova: o `fetch`
    * de id desconhecido é erro (sem tocar a rede) e o de id conhecido traz o
    * bloco de proveniência da AMOSTRA (chamada real à Data API, release fixada)
