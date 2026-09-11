@@ -45,6 +45,7 @@ import {
   type SearchIndex,
   type SearchReply,
 } from "@sbissoli/mcp-search";
+import { classifyError } from "../call-shape.js";
 import { KEY_INDICATORS } from "../resources.js";
 import type { Env } from "../types.js";
 import { fetchUisData, type UisRecord } from "../uis/api.js";
@@ -307,6 +308,10 @@ export function registerDeepResearchTools(server: McpServer, env: Env, record: R
     limit: DEEP_RESEARCH_LIMIT,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     extendOutputSchema: (schema) => schema.extend(provenanceOutputShape()),
+    // Classificador do servidor, para a classe do erro em `search`/`fetch`.
+    // Sem ele o pacote grava os nomes dos parâmetros e deixa a classe
+    // vazia, que foi o que a produção mostrou antes da 0.4.0.
+    classifyError,
     record,
   });
 }
