@@ -15,7 +15,7 @@ import { discoveryResponseForPath } from "./discovery.js";
 import { logger } from "./logger.js";
 import { cursorRejection } from "./pagination.js";
 import { checkRateLimit } from "./rate-limit.js";
-import { withAnalytics, tagRequest } from "./analytics.js";
+import { SELF_ROUTE, withAnalytics, tagRequest } from "./analytics.js";
 import { buildServer } from "./server.js";
 import { buildStatus } from "./status.js";
 import type { Env } from "./types.js";
@@ -136,7 +136,10 @@ export default {
     // de lista do SDK ignoram o cursor). O gate de origem mantém a ordem
     // "segurança antes de protocolo": requisição com Origin estrangeiro não
     // recebe a recusa de protocolo aqui, cai no handler e leva a recusa dele.
-    if (url.pathname === SERVER_CONFIG.mcpRoute && request.method === "POST" && origemAceita(request)) {
+    // A rota privada do dono serve EXATAMENTE a mesma superficie; o que muda
+    // e o registro (tagRequest marca self por ela). Ver src/analytics.ts.
+    const rotaMcp = url.pathname === SELF_ROUTE ? SELF_ROUTE : SERVER_CONFIG.mcpRoute;
+    if (url.pathname === rotaMcp && request.method === "POST" && origemAceita(request)) {
       const recusa = await cursorRejection(request, env.ALLOWED_ORIGIN || "*");
       if (recusa) {
         logger.info("invalid_cursor", { path: url.pathname });
@@ -145,7 +148,7 @@ export default {
     }
 
     const handler = createMcpHandler(() => buildServer(env, recordWithAnalytics), {
-      route: SERVER_CONFIG.mcpRoute,
+      route: rotaMcp,
       // Sem a opção, o handler aceita localhost e *.workers.dev. Ao definir
       // extraAllowedHostnames (domínio próprio), a lista SUBSTITUI os defaults —
       // inclua nela também o hostname workers.dev se ele continuar servido.
