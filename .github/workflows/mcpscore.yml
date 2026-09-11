@@ -53,6 +53,16 @@ on:
   workflow_run:
     workflows: ["Deploy to Cloudflare Workers"]
     types: [completed]
+  # Semanal, porque o gatilho do deploy sozinho deixa um buraco: o
+  # `deploy-worker.yml` é filtrado por caminho, então semana inteira sem tocar
+  # em `src/` não audita nada. E o auditor não é estático — REGRA NOVA dele
+  # também reprova, e isso é notícia, não ruído (é a razão de o piso ser 100).
+  # Sem esta linha, uma regra nova só apareceria no deploy seguinte, que pode
+  # demorar. Os seis repositórios rodam em horas diferentes, de propósito: uma
+  # falha de infraestrutura da Cloudflare não deve chegar como seis alarmes
+  # simultâneos parecendo seis defeitos.
+  schedule:
+    - cron: "17 10 * * 1"
   workflow_dispatch:
 
 jobs:
@@ -60,6 +70,7 @@ jobs:
     name: contrato no que está no ar (streamable http)
     if: >-
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
