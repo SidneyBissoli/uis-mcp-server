@@ -15,7 +15,7 @@ import { discoveryResponseForPath } from "./discovery.js";
 import { logger } from "./logger.js";
 import { cursorRejection } from "./pagination.js";
 import { checkRateLimit } from "./rate-limit.js";
-import { SELF_ROUTE, withAnalytics, tagRequest } from "./analytics.js";
+import { SELF_ROUTE, withAnalytics, tagRequest, recordProtocolMethods } from "./analytics.js";
 import { buildServer } from "./server.js";
 import { buildStatus } from "./status.js";
 import type { Env } from "./types.js";
@@ -130,7 +130,8 @@ export default {
     // escritos no Analytics Engine pegando carona no hook de uso. Sem o binding
     // ANALYTICS (dev local, testes) devolve o registrador intacto.
     // Ver src/analytics.ts.
-    const recordWithAnalytics = withAnalytics(record, env.ANALYTICS, tagRequest(request, env.SELF_MARKER));
+    const tag = tagRequest(request, env.SELF_MARKER);
+    const recordWithAnalytics = withAnalytics(record, env.ANALYTICS, tag);
 
     // Cursor de paginação inválido → -32602 (ver src/pagination.ts: os handlers
     // de lista do SDK ignoram o cursor). O gate de origem mantém a ordem
@@ -139,10 +140,21 @@ export default {
     // A rota privada do dono serve EXATAMENTE a mesma superficie; o que muda
     // e o registro (tagRequest marca self por ela). Ver src/analytics.ts.
     const rotaMcp = url.pathname === SELF_ROUTE ? SELF_ROUTE : SERVER_CONFIG.mcpRoute;
+    // Cópia do corpo tirada ANTES de o handler consumir o stream — é dela que a
+    // telemetria lê os métodos de protocolo (recordProtocolMethods, ao final).
+    // Só para o POST do endpoint MCP; corpo que não é JSON não é assunto daqui.
+    const corpoMcp =
+      url.pathname === rotaMcp && request.method === "POST"
+        ? await request
+            .clone()
+            .json()
+            .catch(() => undefined)
+        : undefined;
     if (url.pathname === rotaMcp && request.method === "POST" && origemAceita(request)) {
       const recusa = await cursorRejection(request, env.ALLOWED_ORIGIN || "*");
       if (recusa) {
         logger.info("invalid_cursor", { path: url.pathname });
+        recordProtocolMethods(env.ANALYTICS, tag, corpoMcp, recusa.status);
         return recusa;
       }
     }
@@ -164,6 +176,12 @@ export default {
     });
 
     const response = await handler(request, env, ctx);
+    // Métodos de protocolo (initialize, tools/list, notifications/*...) não
+    // passam pelo hook de tools: vão para o Analytics Engine daqui, com o
+    // desfecho lido do HTTP da resposta. Ver recordProtocolMethods em
+    // src/analytics.ts.
+    recordProtocolMethods(env.ANALYTICS, tag, corpoMcp, response.status);
+
     logger.info("request", {
       method: request.method,
       path: url.pathname,
