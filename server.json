@@ -15,7 +15,7 @@
     "url": "https://github.com/SidneyBissoli/uis-mcp-server",
     "source": "github"
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "remotes": [
     {
       "type": "streamable-http",

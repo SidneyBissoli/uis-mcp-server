@@ -6,6 +6,18 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 `https://uis.sidneybissoli.com`; a superfície de cada versão está em
 `baselines/`.
 
+## [0.3.1] — 2026-09-16
+
+### Alterado
+
+- **A mecânica do vocabulário da pergunta sobe para `@sbissoli/mcp-search` 0.5.0.**
+  `src/uis/vocabulary.ts` fica só com a tabela medida e os nomes de sempre;
+  expansão, stopwords, singular, nota e ponta inversa vêm de `createVocabulary`
+  (locale `en`, fonte "the UIS"). Cinco servidores carregavam a mesma receita em
+  cópia — regra da Fase 0. Sem mudança de comportamento nem de superfície: os
+  34 testes de `tests/vocabulary.test.ts` passam iguais. (O PR #11 entrou sem
+  esta nota e sem o bump; este commit completa a 0.3.1.)
+
 ## [0.3.0] — 2026-09-16
 
 ### Corrigido
