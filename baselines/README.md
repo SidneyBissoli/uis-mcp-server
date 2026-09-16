@@ -10,6 +10,7 @@ divergência real entre os canais stdio e HTTP.
 |:--|:--|:--|
 | `surface-http-prod-0.1.0.json` | `--url https://uis.sidneybissoli.com/mcp` | o que o endpoint hospedado servia na 0.1.0 (3 tools) |
 | `surface-http-prod-0.2.0.json` | `--url https://uis.sidneybissoli.com/mcp` | o que o endpoint hospedado serve DE FATO desde 03/09/2026 (5 tools: + `search`/`fetch`) |
+| `surface-http-prod-0.3.0.json` | `--url https://uis.sidneybissoli.com/mcp` | o que o endpoint serve desde 16/09/2026 (0.3.0). Diff para a 0.2.0, deliberado e no CHANGELOG: `additionalProperties: false` nas três tools `uis_*` (11/09) e, em `uis_search_indicators`, descrição nova (AND, vocabulário traduzido) + `vocabulary_notes`/`hint` no `outputSchema` |
 
 ## O que este baseline é — e o que não é
 
