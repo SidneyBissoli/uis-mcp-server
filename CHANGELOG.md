@@ -6,9 +6,46 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 `https://uis.sidneybissoli.com`; a superfície de cada versão está em
 `baselines/`.
 
-## [Não publicado]
+## [0.3.0] — 2026-09-16
 
 ### Corrigido
+
+- **A busca devolvia ZERO quando a palavra do usuário não era a da UNESCO.**
+  `uis_search_indicators` casa substrings do que o usuário escreveu contra o
+  nome e o código do indicador, em AND; quem perguntava com a palavra de todo
+  dia, ou com a grafia americana, não recebia um resultado ruim — recebia zero,
+  sem explicação. Achado em 13/09/2026 na produção deste servidor (a mesma
+  classe do irmão `ilo-mcp-server`, consertada lá na 0.6.0) e medido nos
+  5.063 indicadores do catálogo oficial em 16/09/2026: `enrollment` **0**
+  contra enrolment 227 (enrolled 160); `spending`/`budget` **0** contra
+  expenditure 116; `wages`/`salaries` **0** contra salary 4; `preschool`/
+  `kindergarten` **0** contra pre-primary 64; `university`/`college` **0**
+  contra tertiary 448; `elementary` **0** contra primary 886; `scientists`
+  **0** contra researchers 11; `girls`/`women` **0** contra female 1.252;
+  `graduation` 4 contra completion 342; `pupil-teacher` **0** contra
+  "teacher ratio" 10; `foreign` **0** contra "internationally mobile" 979;
+  `illiteracy`, `maths`, `tvet`, `phd`, `stem`, `kids`, `teenagers`,
+  `migrants`, `toilets`, `hygiene`, `certified`, `r&d` **0**, com o
+  indicador existindo sob a grafia da UNESCO. E `school` (499) contra
+  `education` (1.736): "primary school completion" achava zero.
+
+  Conserto em `src/uis/vocabulary.ts` — tabela só de par **medido** (palavra
+  perguntada ausente do catálogo, palavra da fonte presente), servindo as duas
+  pontas: a busca expande o termo (OR dentro do termo, AND entre termos —
+  expandir só aumenta o recall, nunca perde casamento que já havia) e o índice
+  de `search` (Deep Research) recebe a palavra perguntada como keyword do
+  indicador cujo nome traz a palavra da fonte. A tradução é **dita** na
+  resposta (`vocabulary_notes`) e zero resultado deixa de ser beco sem saída
+  (`hint` com o vocabulário da UIS e o resource de códigos verificados).
+  Termo que a UIS não publica fica de fora (`dropout`, `tuition`,
+  `unemployment`, `labor`): apelido para dado inexistente promete o que a
+  fonte não tem. Rodado sobre o catálogo inteiro pelo código construído:
+  enrollment 0 → 387, education spending 0 → 57, university enrollment
+  0 → 114, girls 0 → 1.252, primary school completion 0 → 114; dropout e
+  unemployment seguem em 0. 34 testes novos em `tests/vocabulary.test.ts`,
+  com pares código/nome reais do catálogo conferidos contra a lista
+  versionada do seed. Mesma receita do ilo; se um terceiro servidor precisar
+  dela, o lugar passa a ser `@sbissoli/mcp-search`.
 
 - **As tools `uis_*` recusam parâmetro que não existe.** Sem isso o zod
   descartava a chave desconhecida em silêncio, aplicava o default do parâmetro
@@ -29,6 +66,26 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
   Preço consciente: erro de validação de esquema é respondido pelo SDK ANTES do
   callback, então não passa pela instrumentação e não aparece na telemetria.
   Troca-se visibilidade por prevenção.
+
+### Alterado
+
+- **Superfície:** a descrição de `uis_search_indicators` diz que os termos
+  são AND e que a grafia de todo dia é traduzida; o `outputSchema` ganha
+  `vocabulary_notes` e `hint` (opcionais). As instruções do handshake dizem
+  que a UIS escreve em inglês britânico e que a busca traduz. Baseline de
+  superfície a recapturar após o deploy (`baselines/surface-http-prod-0.3.0.json`).
+
+### Adicionado
+
+Levado pelo `main` sem publicar desde a 0.2.0 (datas do git):
+
+- Telemetria no Analytics Engine: a FORMA de cada chamada (10/09/2026), a
+  classe de erro de `search`/`fetch` (10/09), os métodos de protocolo e o
+  id de sessão e nome do cliente, blobs 9 e 10, como o sih (16/09).
+- Rota privada do dono, para o uso próprio não virar adoção na telemetria; o
+  smoke de produção passa a falar por ela (11/09/2026).
+- Auditoria semanal do mcpscore, para regra nova do auditor não esperar o
+  deploy (11/09/2026).
 
 ## [0.2.0] — 2026-09-03
 

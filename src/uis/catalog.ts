@@ -12,6 +12,7 @@
 import { UisUserError } from "./api.js";
 import type { Env } from "../types.js";
 import { UIS_BASE } from "./api.js";
+import { expandQuery, vocabularyNotes } from "./vocabulary.js";
 
 export const UIS_THEMES = ["EDUCATION", "SCIENCE_TECHNOLOGY_INNOVATION", "CULTURE", "DEMOGRAPHIC_SOCIOECONOMIC"] as const;
 export type UisTheme = (typeof UIS_THEMES)[number];
@@ -81,12 +82,19 @@ export interface UisIndicatorSearchResult {
   retrievedAt: string;
   releaseVersion: string | null;
   sourceUrl: string;
+  /** Traduções de vocabulário DITAS ao chamador (src/uis/vocabulary.ts); vazio quando não houve. */
+  notes: string[];
 }
 
 /**
  * Busca por termos no nome/código do indicador (AND entre termos,
  * case-insensitive), opcionalmente restrita a um tema; ordenada pela contagem de
  * registros disponíveis (proxy de proeminência — a API não publica peso de busca).
+ *
+ * Cada termo vira um OR das grafias que a UNESCO usa para ele
+ * (src/uis/vocabulary.ts): quem escreve "enrollment" ou "spending" casa
+ * "enrolment" e "expenditure" em vez de receber zero calado. O `notes`
+ * devolvido diz quando isso aconteceu.
  */
 export async function searchUisCatalog(
   env: Env,
@@ -96,13 +104,24 @@ export async function searchUisCatalog(
   offset = 0,
 ): Promise<UisIndicatorSearchResult> {
   const db = requireDb(env);
-  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!terms.length) {
+  const expanded = expandQuery(query);
+  if (!expanded.length) {
     throw new UisUserError('Empty query: pass one or more search terms (e.g. "literacy rate youth").');
   }
 
-  const conds = terms.map((_, i) => `(name_lc LIKE ?${i + 1} OR code_lc LIKE ?${i + 1})`);
-  const params: string[] = terms.map((t) => `%${t.replace(/[%_]/g, "")}%`);
+  const params: string[] = [];
+  const conds = expanded.map(
+    (t) =>
+      "(" +
+      t.patterns
+        .map((p) => {
+          params.push(`%${p.replace(/[%_]/g, "")}%`);
+          const n = params.length;
+          return `name_lc LIKE ?${n} OR code_lc LIKE ?${n}`;
+        })
+        .join(" OR ") +
+      ")",
+  );
   if (theme) {
     conds.push(`theme = ?${params.length + 1}`);
     params.push(theme);
@@ -132,6 +151,7 @@ export async function searchUisCatalog(
     retrievedAt: meta.retrievedAt,
     releaseVersion: meta.releaseVersion,
     sourceUrl: UIS_CATALOG_SOURCE_URL,
+    notes: vocabularyNotes(expanded),
   };
 }
 
