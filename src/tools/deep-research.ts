@@ -13,8 +13,10 @@
  *
  * The index: every indicator of the catalogue (`listUisCatalog` — the D1 seed,
  * ~5,060 rows), id `ind:<code>`, keywords from the code's segments, the theme,
- * the Data Browser group name and the curated note of `KEY_INDICATORS` when the
- * indicator is one of the 25 curated ones. Built on first use, kept for 24 h in
+ * the Data Browser group name, the curated note of `KEY_INDICATORS` when the
+ * indicator is one of the 25 curated ones, and the everyday/US words the user
+ * asks with when the name carries the UIS's own wording (`askedWordsFor` —
+ * "enrollment" for an enrolment indicator; src/uis/vocabulary.ts). Built on first use, kept for 24 h in
  * this module (the Worker is stateless per request, but the isolate keeps the
  * module across requests). Ranked by the package index — relevance, not the
  * ANDed substrings of `uis_search_indicators`. Geo units (462) are NOT
@@ -51,6 +53,7 @@ import type { Env } from "../types.js";
 import { fetchUisData, type UisRecord } from "../uis/api.js";
 import { listUisCatalog, UIS_CATALOG_SOURCE_URL, type UisCatalogRow } from "../uis/catalog.js";
 import { provenanceExtras, uisDataVintage, uisProvenance } from "../uis/provenance.js";
+import { askedWordsFor } from "../uis/vocabulary.js";
 import type { RecordUsage } from "../usage-core.js";
 import { noticesFromUisRecords } from "./uis.js";
 import { provenanceOutputShape } from "./shared.js";
@@ -124,7 +127,16 @@ export function indexEntries(rows: readonly UisCatalogRow[]): IndexEntry[] {
         id: `${DEEP_RESEARCH_ID_PREFIX}${r.code}`,
         title: r.name || r.code,
         url: browserViewUrl(r.code, r.framework_id),
-        keywords: [...codeSegments(r.code), theme, r.group_name ?? "", curated ?? ""].filter(Boolean),
+        keywords: [
+          ...codeSegments(r.code),
+          theme,
+          r.group_name ?? "",
+          curated ?? "",
+          // A palavra com que se PERGUNTA, quando difere da que a UNESCO escreve
+          // ("enrollment", "spending") — sem isto o ranqueador não encontra o
+          // indicador certo pela palavra do usuário.
+          ...askedWordsFor(r.name || r.code),
+        ].filter(Boolean),
         text: `${r.name}${r.group_name ? ` — ${r.group_name}` : ""} (${theme}).`,
       };
     });

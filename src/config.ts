@@ -13,7 +13,7 @@ export const SERVER_CONFIG = {
   /** Nome curto do servidor (handshake MCP, /status, landing). */
   name: "uis-mcp-server",
   /** Versão do servidor — manter em sincronia com package.json. */
-  version: "0.2.0",
+  version: "0.3.0",
   /** Título de exibição (clientes MCP mostram ao usuário). */
   title: "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
   /**
@@ -49,7 +49,10 @@ export const SERVER_CONFIG = {
   instructions:
     "Statistics from the UNESCO Institute for Statistics (UIS) via the official Data API: " +
     "education (enrolment, completion, literacy, spending), science/R&D (SDG 9.5), culture " +
-    "(SDG 11.4) and communication indicators, by country or region and year. Typical flow: " +
+    "(SDG 11.4) and communication indicators, by country or region and year. The UIS is worded " +
+    "in British statistical English; uis_search_indicators resolves everyday and US wording to it " +
+    "(enrollment→enrolment, spending→expenditure, preschool→pre-primary, university→tertiary) and " +
+    "reports the translation. Typical flow: " +
     "uis_search_indicators to find an indicator code, uis_list_geo_units for country/region " +
     "codes, then uis_get_data with year filters. `search`/`fetch` implement the ChatGPT Deep " +
     "Research contract over the same catalogue (ids `ind:<code>`) — prefer the uis_* tools when " +

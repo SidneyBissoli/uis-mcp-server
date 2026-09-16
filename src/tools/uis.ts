@@ -13,6 +13,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { UIS_LIMITS } from "../config.js";
+import { KEY_INDICATORS_URI } from "../resources.js";
 import { fetchUisData, UisUserError, type UisRecord } from "../uis/api.js";
 import { searchUisCatalog, searchUisGeoUnits, UIS_THEMES, type UisTheme } from "../uis/catalog.js";
 import { provenance, uisDataVintage, uisProvenance } from "../uis/provenance.js";
@@ -53,10 +54,24 @@ export function uisSearchIndicatorsHandler(env: Env) {
           geo_types: e.geo_types,
         })),
         has_more: hasMore,
+        ...(result.notes.length ? { vocabulary_notes: result.notes } : {}),
         ...(hasMore
           ? {
               next_offset: offset + result.entries.length,
               hint: `Showing ${result.entries.length} of ${result.total} matches (largest first) — add terms or a theme filter to narrow, or page with offset.`,
+            }
+          : {}),
+        // Zero resultado sem explicação é beco sem saída: o catálogo é da UNESCO
+        // e usa o vocabulário dela. Dizer o que fazer em seguida é parte da resposta.
+        ...(result.total === 0
+          ? {
+              hint:
+                "No indicator matches all terms. Try fewer or broader terms (the match is a substring AND over " +
+                "the indicator name and code), drop the theme filter, or read the resource " +
+                `${KEY_INDICATORS_URI} for verified codes by topic. UIS wording is British and statistical: ` +
+                "enrolment (not enrollment), expenditure (not spending), pre-primary (not preschool), tertiary " +
+                "(not university/college), completion (not graduation), female/male (not girls/boys). Labour " +
+                "statistics are not published by the UIS — use the ILOSTAT sibling server.",
             }
           : {}),
       };
@@ -225,12 +240,16 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
       description:
         "Search the UNESCO Institute for Statistics catalogue of ~5,000 indicators — education, " +
         "science/R&D, culture and communication — by keywords in the name or code, optionally " +
-        "filtered by theme. Returns indicator codes to use with uis_get_data, plus each " +
+        "filtered by theme. All terms must match (AND, case-insensitive), so start with 2–3 words " +
+        "and drop terms if you get 0 results. Everyday and US wording is resolved to the UIS's own " +
+        "(enrollment→enrolment, spending→expenditure, preschool→pre-primary, university→tertiary, " +
+        "graduation→completion, girls/boys→female/male); when that happens the response says so " +
+        "in vocabulary_notes. Returns indicator codes to use with uis_get_data, plus each " +
         "indicator's data availability (years, record count). Searches the catalogue only — it " +
         "does not return statistical values (use uis_get_data); ILO labour statistics live in " +
         "the sibling ILOSTAT MCP server.",
       inputSchema: z.object({
-        query: z.string().min(1).describe('Keywords, matched against indicator name and code (e.g. "literacy rate youth")'),
+        query: z.string().min(1).describe('Keywords, matched against indicator name and code, AND between terms (e.g. "literacy rate youth")'),
         theme: z
           .enum(UIS_THEMES)
           .optional()
@@ -245,6 +264,8 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         offset: z.number(),
         has_more: z.boolean(),
         next_offset: z.number().optional(),
+        vocabulary_notes: z.array(z.string()).optional(),
+        hint: z.string().optional(),
         indicators: z.array(
           z.object({
             code: z.string(),

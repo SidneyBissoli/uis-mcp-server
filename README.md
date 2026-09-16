@@ -16,7 +16,7 @@ servido como secundário.
 
 | Tool | O quê | Fonte |
 |---|---|---|
-| `uis_search_indicators` | busca ~5.060 indicadores (4 temas) com disponibilidade de dados; paginação por `offset` | catálogo em D1 (100% local) |
+| `uis_search_indicators` | busca ~5.060 indicadores (4 temas) com disponibilidade de dados; traduz a palavra do usuário para a da UNESCO e diz que traduziu (`vocabulary_notes`); paginação por `offset` | catálogo em D1 (100% local) |
 | `uis_list_geo_units` | 462 códigos de país/região (NATIONAL/REGIONAL); paginação por `offset` | D1 (100% local) |
 | `uis_get_data` | registros por indicador/geo unit/anos, footnotes opcionais | 1 chamada à Data API por consulta (release fixada) |
 | `search` | contrato ChatGPT Deep Research: ranqueia a consulta contra o catálogo inteiro, devolve `{ id, title, url }` (`ind:<code>`) | índice em memória construído do catálogo D1 (24 h) |
@@ -27,6 +27,42 @@ modos `concise`/`detailed` via parâmetro `provenance_mode`) nos três canais do
 contrato: `structuredContent`, `_meta` namespaced (`com.sidneybissoli.uis/*`) e
 rodapé de texto. Em `search`/`fetch` o canal de texto é o JSON do contrato
 Deep Research (sem rodapé); a proveniência viaja em `structuredContent` e `_meta`.
+
+### Pergunte com as suas palavras, não com as da UNESCO
+
+A UIS escreve em inglês britânico e estatístico, e o catálogo é casado por
+substring contra o NOME do indicador — então a palavra de todo dia, ou a grafia
+americana, devolvia **zero, calado**. Medido nos 5.063 indicadores do catálogo
+oficial em 16/09/2026 e consertado na 0.3.0: a busca expande o termo para as
+grafias da fonte (OR dentro do termo, AND entre termos — só aumenta o recall) e
+**diz** que traduziu, em `vocabulary_notes`; zero resultado vem com `hint` do
+que fazer em seguida. A mesma tabela alimenta o índice de `search` (Deep
+Research), que recebe a palavra perguntada como keyword do indicador cujo nome
+traz a palavra da fonte.
+
+| você pergunta | achava | a UNESCO escreve | acha |
+| --- | ---: | --- | ---: |
+| `enrollment` | 0 | enrolment | 387 |
+| `education spending`, `budget` | 0 | expenditure | 57 |
+| `teacher wages` | 0 | salary | 4 |
+| `university`, `college` | 0 | tertiary | 448 |
+| `preschool`, `kindergarten` | 0 | pre-primary, early childhood | 113 |
+| `elementary` | 0 | primary | 886 |
+| `scientists` | 0 | researchers | 11 |
+| `girls`, `women` | 0 | female | 1.252 |
+| `kids`, `teenagers` | 0 | children, adolescents | 161, 131 |
+| `graduation rate` | 0 | completion | 342 |
+| `pupil-teacher ratio` | 0 | pupil-qualified teacher ratio | 10 |
+| `foreign students` | 249 | internationally mobile students | 979 |
+| `primary school completion` | 0 | primary education | 114 |
+| `illiteracy`, `maths`, `tvet`, `phd`, `stem` | 0 | illiterate, mathematics, vocational, doctoral, science, technology, engineering | 268, 79, 33, 24, 9 |
+
+Só entra par **medido** (palavra perguntada ausente do catálogo, palavra da
+fonte presente) — a tabela está em `src/uis/vocabulary.ts`, com as contagens.
+Termo que a UIS não publica fica de fora e segue devolvendo zero, porque apelido
+para dado inexistente promete o que a fonte não tem: `dropout`, `tuition`,
+`unemployment` e `labor` (estatística de trabalho é do servidor irmão
+`ilo-mcp-server`; o que `labor` casa hoje são 62 nomes com "collaboration").
 
 ### ChatGPT (Deep Research)
 
@@ -88,7 +124,7 @@ tool é chamável — as `uis_*` continuam sendo as certas para dados.
 
 ```bash
 npm install
-npm run typecheck && npm test   # testes offline (tools, framework, evals-fixtures)
+npm run typecheck && npm test   # testes offline (tools, framework, vocabulário, evals-fixtures)
 npm run dev                     # http://localhost:8787/mcp
 
 # Seed do catálogo (D1) — necessário antes do primeiro uso:
