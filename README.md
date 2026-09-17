@@ -10,7 +10,9 @@ convenção de naming do mcp-builder; tools com prefixo de serviço `uis_`).
 
 Produção: **`https://uis.sidneybissoli.com`** (endpoint MCP em `/mcp`; padrão de
 URLs do portfólio). O hostname `uis-mcp-server.sidneybissoli.workers.dev` permanece
-servido como secundário.
+servido como secundário. O mesmo servidor também roda **localmente por stdio**
+(pacote [`uis-mcp-server`](https://www.npmjs.com/package/uis-mcp-server) no npm —
+ver [Rodar localmente](#rodar-localmente-stdio)).
 
 ## Tools
 
@@ -88,6 +90,58 @@ gravadas no catálogo pelo seed (`framework_id`, `group_id`, `group_name`). No m
 desenvolvedor do ChatGPT (Settings → Security and login → Developer mode) qualquer
 tool é chamável — as `uis_*` continuam sendo as certas para dados.
 
+## Rodar localmente (stdio)
+
+Prefere não passar suas consultas por um host de terceiros? O **mesmo servidor**
+(`buildServer` de `src/server.ts`) também roda como **processo stdio local**
+(`src/cli.ts`), falando direto com a UIS Data API oficial — mesmas 5 tools e 3
+resources, mesmos limites, mesmo bloco de proveniência, sem Cloudflare no
+caminho. A superfície dos dois canais é idêntica por construção (o dump do CI
+confere: `node scripts/dump-surface.mjs --stdio`).
+
+Sem instalação — o pacote está no npm
+([`uis-mcp-server`](https://www.npmjs.com/package/uis-mcp-server), Node ≥ 22):
+
+```json
+{
+  "mcpServers": {
+    "unesco-uis": {
+      "command": "npx",
+      "args": ["-y", "uis-mcp-server"]
+    }
+  }
+}
+```
+
+Ou a partir do código-fonte:
+
+```bash
+git clone https://github.com/SidneyBissoli/uis-mcp-server
+cd uis-mcp-server
+npm install
+npm run build
+node dist/cli.js   # serve MCP via stdio (Ctrl+C para parar)
+```
+
+Diferenças em relação ao servidor hospedado, todas por ausência dos bindings da
+Cloudflare (`src/uis/catalog-memory.ts`):
+
+- a release corrente (`/versions/default`) fica na memória do processo (KV →
+  Map com TTL): resolvida uma vez por sessão, não entre sessões;
+- o catálogo de indicadores e os geo units são **baixados dos endpoints oficiais
+  na primeira busca** (`/definitions/indicators`, `/definitions/geounits` — os
+  mesmos que o seed do D1 lê; ~1 s), e o `retrieved_at` real desse download é o
+  que a proveniência reporta;
+- o catálogo em memória **não** baixa as definições do UIS Data Browser
+  (~6,7 MB): `framework_id`/`group_*` ficam nulos, então a URL que `fetch`
+  (Deep Research) cita cai para a home do Data Browser e o índice de `search`
+  não tem o nome do grupo nas keywords. Deep Research conversa com o servidor
+  hospedado, onde o seed do D1 tem tudo;
+- sem métricas de uso, rate limit ou autenticação (não há rede de entrada).
+
+Logs vão para **stderr** — stdout carrega só o JSON-RPC. O `Dockerfile` do
+repositório constrói este runtime (para o registro Glama).
+
 ## Decisões vinculantes (mini-spike docs/06 + decisor, 07/08/2026)
 
 - **Release fixada em toda consulta de dados** (`version=` explícita, resolvida de
@@ -124,8 +178,10 @@ tool é chamável — as `uis_*` continuam sendo as certas para dados.
 
 ```bash
 npm install
-npm run typecheck && npm test   # testes offline (tools, framework, vocabulário, evals-fixtures)
+npm run typecheck && npm test   # testes offline (tools, framework, vocabulário, catálogo em memória, evals-fixtures)
 npm run dev                     # http://localhost:8787/mcp
+npm run build                   # runtime stdio → dist/cli.js (o que vai para o npm)
+node scripts/dump-surface.mjs --stdio   # fumaça offline do build: initialize → tools/resources/prompts
 
 # Seed do catálogo (D1) — necessário antes do primeiro uso:
 node scripts/seed-uis-catalog.mjs

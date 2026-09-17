@@ -133,7 +133,7 @@ export const LANDING = {
     "The indicator catalogue and the 462 geo units are served locally — searching costs no upstream call.",
   ] as readonly string[],
   repoUrl: "https://github.com/SidneyBissoli/uis-mcp-server",
-  npmUrl: "" as string,
+  npmUrl: "https://www.npmjs.com/package/uis-mcp-server",
   docsUrl: "https://github.com/SidneyBissoli/uis-mcp-server/blob/main/README.md",
   emOutroIdioma: {
     lang: "pt-BR" as "pt-BR" | "en",

@@ -38,11 +38,16 @@ export class UisUpstreamError extends Error {
 }
 
 /** ISO-8601 sem milissegundos (formato canônico do contrato de proveniência). */
-function nowIso(): string {
+export function nowIso(): string {
   return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
 const USER_AGENT = "uis-mcp-server (https://uis.sidneybissoli.com; sbissoli76@gmail.com)";
+
+/** Headers de toda chamada ao upstream — o mesmo User-Agent do seed (scripts/seed-uis-catalog.mjs). */
+export function upstreamHeaders(): Record<string, string> {
+  return { "User-Agent": USER_AGENT };
+}
 
 export interface UisRelease {
   version: string;

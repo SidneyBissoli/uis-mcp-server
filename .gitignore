@@ -20,3 +20,6 @@ snyk.json
 # medical-terminologies-mcp (PROGRESS.md). O painel do portfolio-monitor le o
 # arquivo LOCAL e renderiza o HTML fora do repositorio do produto.
 ROADMAP.md
+
+# Build do runtime stdio (tsc -p tsconfig.build.json)
+dist/

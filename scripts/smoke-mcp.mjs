@@ -6,9 +6,8 @@
  * e a release fixada → search → fetch (Deep Research) e id desconhecido.
  *
  * A contagem de tools NÃO é literal: vem de /status (`tool_names`, lista de
- * src/tools/index.ts presa ao servidor real por teste). Este repositório é
- * worker-only — o único baseline é o de produção, então derivar a contagem do
- * baseline seria circular.
+ * src/tools/index.ts presa ao servidor real por teste). O único baseline HTTP
+ * é o de produção, então derivar a contagem do baseline seria circular.
  *
  * Uso: node scripts/smoke-mcp.mjs [base-url]
  */

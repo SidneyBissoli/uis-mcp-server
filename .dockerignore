@@ -1,0 +1,12 @@
+node_modules
+dist
+.wrangler
+.git
+.env
+.dev.vars
+.mcpregistry_*
+baselines
+evals
+security
+tests
+scripts
