@@ -5,12 +5,13 @@ name: CI
 # PR nenhum era testado. O deploy-worker.yml passou a rodar a suíte, mas só em
 # push para main e só nos caminhos do Worker; este arquivo é o que cobre o PR.
 #
-# Não há passo de build: o repositório INTEIRO é o Worker, transpilado pelo
-# próprio wrangler na hora do deploy — não há `dist/` para gerar nem runtime
-# stdio para fumegar, como no irmão ilo-mcp-server. O lugar dessa garantia aqui
-# é o dry-run do wrangler, que monta o bundle de verdade e pega o que o tsc não
-# pega: import que resolve em tipo mas não resolve no bundler (foi a classe de
-# risco de mexer na árvore do SDK em 30/08/2026).
+# Dois canais, duas garantias. O Worker é transpilado pelo próprio wrangler na
+# hora do deploy: o dry-run monta o bundle de verdade e pega o que o tsc não
+# pega — import que resolve em tipo mas não resolve no bundler (foi a classe de
+# risco de mexer na árvore do SDK em 30/08/2026). O runtime stdio (src/cli.ts,
+# desde a 0.4.0) é o que vai para o npm: `npm run build` gera o dist/ e o dump
+# da superfície fala JSON-RPC com ele por subprocesso, offline — como no irmão
+# ilo-mcp-server.
 
 on:
   push:
@@ -36,6 +37,11 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - run: npm run build
+      # A superfície publicada é o produto: initialize + tools/list +
+      # resources/list + prompts/list sobre o build, offline.
+      - name: Dump da superfície (fumaça do runtime stdio)
+        run: node scripts/dump-surface.mjs --stdio > /dev/null
       # Sem credencial: --dry-run só monta o bundle e sai, não fala com a
       # Cloudflare. Se o Worker não empacota, o PR fica vermelho aqui e não em
       # produção.

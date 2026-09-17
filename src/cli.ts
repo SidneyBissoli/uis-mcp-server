@@ -1,0 +1,75 @@
+#!/usr/bin/env node
+/**
+ * Runtime stdio local — o MESMO servidor (buildServer) sem a Cloudflare no
+ * caminho: fala direto com a UIS Data API oficial.
+ *
+ * Diferenças em relação ao Worker hospedado, todas por ausência de binding:
+ *  - release corrente em memória do processo (KV → Map com TTL): resolvida uma
+ *    vez por sessão, não entre sessões;
+ *  - catálogo de indicadores e geo units em memória (D1 → download dos
+ *    endpoints oficiais na primeira busca; `retrieved_at` real desse download;
+ *    sem as colunas do Data Browser — ver src/uis/catalog-memory.ts);
+ *  - sem estatísticas de uso, sem rate limit, sem auth (não há rede de entrada).
+ * Tools, validações, limites e o bloco de proveniência são idênticos.
+ *
+ * Logs vão para stderr — stdout é exclusivo do JSON-RPC.
+ */
+
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import { SERVER_CONFIG } from "./config.js";
+import { unknownCursorError } from "./pagination.js";
+import { buildServer } from "./server.js";
+import type { Env, UisCache } from "./types.js";
+import { UIS_BASE } from "./uis/api.js";
+import { InMemoryUisCatalog } from "./uis/catalog-memory.js";
+
+/** Cache em memória com a forma do KV que o código do servidor usa (get json / put com TTL). */
+export class MemoryCache implements UisCache {
+  private readonly store = new Map<string, { value: string; expiresAt: number | null }>();
+
+  async get<T>(key: string, _type: "json"): Promise<T | null> {
+    const hit = this.store.get(key);
+    if (!hit) return null;
+    if (hit.expiresAt !== null && hit.expiresAt <= Date.now()) {
+      this.store.delete(key);
+      return null;
+    }
+    return JSON.parse(hit.value) as T;
+  }
+
+  async put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void> {
+    const ttl = options?.expirationTtl;
+    this.store.set(key, { value, expiresAt: ttl ? Date.now() + ttl * 1000 : null });
+  }
+}
+
+export function localEnv(): Env {
+  return { UIS_CACHE: new MemoryCache(), CATALOG_MEMORY: new InMemoryUisCatalog() };
+}
+
+async function main(): Promise<void> {
+  const server = buildServer(localEnv());
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+
+  // Cursor de paginação inválido → -32602, o mesmo guarda que o Worker aplica
+  // no POST (src/pagination.ts). Aqui ele entra DEPOIS do connect porque é o
+  // connect que instala o onmessage do Protocol: envolvê-lo antes só somaria um
+  // ouvinte, sem poder de interromper a entrega ao SDK.
+  const entregaAoServidor = transport.onmessage;
+  transport.onmessage = (message) => {
+    const recusa = unknownCursorError(message);
+    if (recusa) {
+      void transport.send(recusa);
+      return;
+    }
+    entregaAoServidor?.(message);
+  };
+
+  console.error(`${SERVER_CONFIG.name} ${SERVER_CONFIG.version} — stdio, upstream ${UIS_BASE}`);
+}
+
+main().catch((e) => {
+  console.error("fatal:", e);
+  process.exit(1);
+});

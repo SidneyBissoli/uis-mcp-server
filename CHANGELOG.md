@@ -2,9 +2,26 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões
 seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
-`version`). O servidor é worker-only: uma versão = um deploy em
-`https://uis.sidneybissoli.com`; a superfície de cada versão está em
-`baselines/`.
+`version`). Uma versão = um deploy em `https://uis.sidneybissoli.com` e, desde
+a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
+Registry; a superfície de cada versão está em `baselines/`.
+
+## [0.4.0] — 2026-09-17
+
+### Adicionado
+
+- **Runtime stdio local e publicação no npm.** `src/cli.ts` roda o MESMO
+  `buildServer` do Worker sem a Cloudflare no caminho: release corrente em
+  memória do processo no lugar do KV; catálogo de indicadores e geo units
+  baixado dos endpoints oficiais na primeira busca (`src/uis/catalog-memory.ts`,
+  mesma semântica de busca, ordenação e paginação do D1, `retrieved_at` real do
+  download; sem as colunas do Data Browser — `fetch` cita a home do Data
+  Browser). Superfície idêntica ao endpoint hospedado, conferida contra o
+  baseline `surface-http-prod-0.3.0.json`. Pacote `uis-mcp-server` (`bin`,
+  `files: dist/`, `mcpName`, licença MIT), `server.json` com `packages[]` npm ao
+  lado do `remotes`, `Dockerfile` para o Glama, `npm run build` + fumaça stdio
+  no CI. `agents` vira devDependency (só o Worker o usa; o wrangler o resolve
+  no `npm ci`). Molde: ilo-mcp-server (Sessão 09 de lá).
 
 ## [0.3.1] — 2026-09-16
 

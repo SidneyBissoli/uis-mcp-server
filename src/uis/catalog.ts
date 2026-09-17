@@ -2,7 +2,8 @@
  * Catálogo UIS em D1 (mesma database do catálogo ILOSTAT, tabelas próprias
  * `uis_indicators`/`uis_geounits`/`uis_meta`) — busca 100% local, sem chamada ao
  * upstream por consulta. Medição do mini-spike (docs/06): 5.063 indicadores em
- * 4 temas + 462 geo units.
+ * 4 temas + 462 geo units. Sem D1 (runtime stdio, src/cli.ts), delega ao
+ * catálogo em memória (catalog-memory.ts), de mesma semântica.
  *
  * Seed: scripts/seed-uis-catalog.mjs grava também o instante REAL da extração e
  * a release corrente em `uis_meta` — é esse `retrieved_at` que o bloco de
@@ -103,6 +104,8 @@ export async function searchUisCatalog(
   limit: number,
   offset = 0,
 ): Promise<UisIndicatorSearchResult> {
+  // Runtime stdio (sem D1): catálogo em memória com a mesma semântica de busca.
+  if (!env.CATALOG_DB && env.CATALOG_MEMORY) return env.CATALOG_MEMORY.search(query, theme, limit, offset);
   const db = requireDb(env);
   const expanded = expandQuery(query);
   if (!expanded.length) {
@@ -168,6 +171,7 @@ export interface UisCatalogListing {
  * As tools `uis_*` nunca chamam isto: buscam por SQL, página a página.
  */
 export async function listUisCatalog(env: Env): Promise<UisCatalogListing> {
+  if (!env.CATALOG_DB && env.CATALOG_MEMORY) return env.CATALOG_MEMORY.all();
   const db = requireDb(env);
   const [rows, meta] = await Promise.all([
     db.prepare(`SELECT ${CATALOG_COLUMNS} FROM uis_indicators ORDER BY code`).all<UisCatalogRow>(),
@@ -197,6 +201,7 @@ export async function searchUisGeoUnits(
   limit: number,
   offset = 0,
 ): Promise<UisGeoUnitSearchResult> {
+  if (!env.CATALOG_DB && env.CATALOG_MEMORY) return env.CATALOG_MEMORY.geoUnits(search, type, limit, offset);
   const db = requireDb(env);
   const conds: string[] = [];
   const params: string[] = [];

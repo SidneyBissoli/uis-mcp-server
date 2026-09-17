@@ -61,8 +61,8 @@ describe("versão sincronizada entre package.json e seus espelhos", () => {
  * ilo falhou no registro com "expected length <= 100" em `description` (139
  * chars): o npm já tinha publicado, e destravar exigiu `git tag -f`. O limite
  * é do registro (schema oficial), não escolha nossa — vigiá-lo aqui move o erro
- * para antes do bump. Este servidor ainda não publica no registro
- * (`private: true`), mas o server.json já existe e um dia sobe.
+ * para antes do bump. Este servidor publica no registro desde a 0.4.0
+ * (runtime stdio + npm, 17/09/2026).
  */
 describe("server.json respeita os limites do MCP Registry", () => {
   it("description tem no máximo 100 caracteres", () => {
