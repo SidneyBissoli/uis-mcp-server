@@ -88,6 +88,44 @@ export interface UisIndicatorSearchResult {
 }
 
 /**
+ * Um termo expandido vira o WHERE que casa o INÍCIO de uma palavra.
+ *
+ * Era `LIKE '%p%'` até a 0.4.x — e `LIKE '%p%'` É o casamento sem fronteira,
+ * que inventa resultado sem dar erro. O caso caro deste catálogo estava até
+ * DOCUMENTADO na tabela de vocabulário: `boys → male (palavra inteira)`. Só que
+ * a mecânica não sabia fazer palavra inteira, então `boy` casava também os
+ * 1.252 nomes com `female` — mais da metade do resultado era o sexo oposto ao
+ * perguntado, calado. Medido em 22/09/2026, a mesma classe do IBGE (`uber`
+ * dentro de `TUBÉRCULOS`) e do ILOSTAT (`formal` dentro de `informal`).
+ *
+ * `GLOB 'p*'` = começa o texto; `GLOB '*[^a-z0-9]p*'` = vem logo depois de algo
+ * que não é letra nem dígito. Juntos: começa uma palavra. `LIKE` não serve — a
+ * fronteira precisa de classe de caracteres, que `LIKE` não tem.
+ *
+ * Só no INÍCIO, de propósito: a tabela guarda radicais (`illiterate`,
+ * `immigrant`, `vocational`) que precisam alcançar as flexões deles. Exigir
+ * fronteira no fim mataria isso.
+ *
+ * `GLOB` não tem caractere de escape, então `*`, `?` e `[` saem do padrão —
+ * `patterns[0]` é o texto que o USUÁRIO digitou. Padrão que fica vazio depois
+ * disso vira `0 = 1`, e não `GLOB '*'`, que casaria o catálogo inteiro.
+ */
+function termToSql(patterns: readonly string[], params: string[]): string {
+  const conds = patterns.flatMap((p) => {
+    const limpo = p.replace(/[*?[\]]/g, "");
+    if (!limpo) return [];
+    params.push(`${limpo}*`, `*[^a-z0-9]${limpo}*`);
+    const inicio = params.length - 1;
+    const apos = params.length;
+    return [
+      `name_lc GLOB ?${inicio} OR name_lc GLOB ?${apos} ` +
+        `OR code_lc GLOB ?${inicio} OR code_lc GLOB ?${apos}`,
+    ];
+  });
+  return conds.length ? conds.join(" OR ") : "0 = 1";
+}
+
+/**
  * Busca por termos no nome/código do indicador (AND entre termos,
  * case-insensitive), opcionalmente restrita a um tema; ordenada pela contagem de
  * registros disponíveis (proxy de proeminência — a API não publica peso de busca).
@@ -113,18 +151,7 @@ export async function searchUisCatalog(
   }
 
   const params: string[] = [];
-  const conds = expanded.map(
-    (t) =>
-      "(" +
-      t.patterns
-        .map((p) => {
-          params.push(`%${p.replace(/[%_]/g, "")}%`);
-          const n = params.length;
-          return `name_lc LIKE ?${n} OR code_lc LIKE ?${n}`;
-        })
-        .join(" OR ") +
-      ")",
-  );
+  const conds = expanded.map((t) => `(${termToSql(t.patterns, params)})`);
   if (theme) {
     conds.push(`theme = ?${params.length + 1}`);
     params.push(theme);
