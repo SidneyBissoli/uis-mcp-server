@@ -223,7 +223,7 @@ describe("a tradução é dita, não é silenciosa", () => {
 });
 
 describe("o WHERE do D1 carrega a expansão", () => {
-  it("um termo traduzido vira OR de LIKEs, com os padrões da tabela nos parâmetros", async () => {
+  it("um termo traduzido vira OR de GLOBs de fronteira, com os padrões da tabela nos parâmetros", async () => {
     const visto: { sql: string; params: unknown[] }[] = [];
     const db = {
       prepare(sql: string) {
@@ -249,9 +249,24 @@ describe("o WHERE do D1 carrega a expansão", () => {
 
     const consulta = visto.find((v) => v.sql.includes("SELECT code"));
     expect(consulta).toBeDefined();
-    expect(consulta?.sql).toContain("(name_lc LIKE ?1 OR code_lc LIKE ?1 OR name_lc LIKE ?2 OR code_lc LIKE ?2 OR name_lc LIKE ?3 OR code_lc LIKE ?3)");
-    expect(consulta?.sql).toContain(" AND (name_lc LIKE ?4 OR code_lc LIKE ?4)");
-    expect(consulta?.params).toEqual(["%enrollment%", "%enrolment%", "%enrolled%", "%rate%"]);
+    // Cada padrão gasta DOIS parâmetros: `p*` (começa o texto) e
+    // `*[^a-z0-9]p*` (vem logo depois de algo que não é letra nem dígito).
+    // Juntos, casam o INÍCIO de uma palavra — `LIKE '%p%'` casava o miolo.
+    const glob = (n: number, m: number): string =>
+      `name_lc GLOB ?${n} OR name_lc GLOB ?${m} OR code_lc GLOB ?${n} OR code_lc GLOB ?${m}`;
+    expect(consulta?.sql).toContain(`(${glob(1, 2)} OR ${glob(3, 4)} OR ${glob(5, 6)})`);
+    expect(consulta?.sql).toContain(` AND (${glob(7, 8)})`);
+    expect(consulta?.sql).not.toContain("LIKE");
+    expect(consulta?.params).toEqual([
+      "enrollment*",
+      "*[^a-z0-9]enrollment*",
+      "enrolment*",
+      "*[^a-z0-9]enrolment*",
+      "enrolled*",
+      "*[^a-z0-9]enrolled*",
+      "rate*",
+      "*[^a-z0-9]rate*",
+    ]);
     expect(r.notes).toEqual(['"enrollment" was also searched as enrolment, enrolled — the wording the UIS uses.']);
   });
 });
