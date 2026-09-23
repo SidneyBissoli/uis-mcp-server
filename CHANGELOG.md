@@ -6,6 +6,41 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [0.6.0] — 2026-09-23
+
+Esta versão carrega tudo o que entrou desde a 0.4.0: a 0.5.0 foi numerada no
+`package.json` e nunca publicada, e a tag leva o master inteiro.
+
+### Adicionado
+
+- **Classe `defeito` na telemetria, e `classifyThrown()`.** `classifyError`
+  classifica pela MENSAGEM, e a frase de uma exceção de runtime não casa com
+  padrão nenhum do vocabulário: um `TypeError` ia para `outro`, a classe que a
+  própria definição do tipo descreve como alarme. O sinal honesto é o TIPO
+  (`TypeError`, `RangeError`, `ReferenceError`, `SyntaxError` são bug nosso, não
+  condição da fonte); caçar por texto fossilizaria a mensagem do V8, que muda
+  entre versões de Node. `classifyThrown(error)` entra só no `catch`, onde o
+  objeto do erro existe. **`classifyError` fica INTACTA** — é ela que o
+  `@sbissoli/mcp-search` recebe, onde não há objeto —, então nenhum consumidor
+  muda. Nenhuma tool, nenhum esquema e nenhuma resposta mudam: é telemetria.
+  Conserto nascido no `ibge-br-mcp` 5.1.2 e portado igual aos cinco irmãos.
+
+### Corrigido
+
+- **A busca do catálogo casava o MIOLO de uma palavra (0.5.0, não publicada).**
+  `searchUisCatalog` montava `name_lc LIKE '%p%'`, e casamento sem fronteira
+  inventa resultado sem dar erro. O defeito estava DOCUMENTADO na própria tabela
+  de vocabulário desde que ela nasceu (`boys -> male (palavra inteira)`): a
+  mecânica não sabia fazer palavra inteira, então `boy` casava também os 1.252
+  nomes com `female` ao lado dos 1.196 de `male` — mais da metade da resposta
+  era o sexo OPOSTO ao perguntado, calado. A fronteira passa a valer no INÍCIO
+  da palavra (`@sbissoli/mcp-search` 0.6.0).
+
+### Alterado
+
+- Grupo de dependências menores e de correção (6 pacotes).
+- `glama.json` passa a declarar o mantenedor.
+
 ## [0.4.0] — 2026-09-17
 
 ### Adicionado
