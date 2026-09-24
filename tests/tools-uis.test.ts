@@ -212,6 +212,101 @@ describe("uisGetDataHandler", () => {
   });
 });
 
+/**
+ * As três ausências que a UIS distingue — e que até 24/09/2026 saíam todas com
+ * a MESMA frase nossa ("many indicators do not cover all countries or years"),
+ * que para as duas primeiras afirma o contrário do que a fonte respondeu.
+ * Os `hints` abaixo são as respostas literais da API, medidas em 24/09/2026.
+ */
+describe("ausência: a palavra é da fonte, não a nossa", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const HINT_INDICADOR = { code: "UIS::HINT::001", message: "The indicator could not be found, XX.INDICADOR.FALSO" };
+  const HINT_GEO = { code: "UIS::HINT::003", message: "The geoUnit could not be found, ZZZ" };
+  const HINT_PERIODO = {
+    code: "UIS::HINT::004",
+    message: "No data for the given time range, available time range for indicator LR.AG15T99= start: 1970, end: 2024",
+  };
+
+  it("indicador inexistente é erro com a frase da fonte, nunca zero com conselho de cobertura", async () => {
+    vi.stubGlobal("fetch", mockUisFetch({ records: [], hints: [HINT_INDICADOR] }));
+    const r = (await uisGetDataHandler({} as Env)({ indicators: ["XX.INDICADOR.FALSO"], geo_units: ["BRA"] })) as {
+      content: Array<{ text: string }>;
+      isError?: boolean;
+    };
+    expect(r.isError).toBe(true);
+    expect(r.content[0]?.text).toContain("The indicator could not be found");
+    expect(r.content[0]?.text).toContain("was not found");
+    // A conclusão OPOSTA não pode sobrar em lugar nenhum da resposta.
+    expect(r.content[0]?.text).not.toContain("do not cover all");
+  });
+
+  it("geo unit inexistente segue o mesmo caminho", async () => {
+    vi.stubGlobal("fetch", mockUisFetch({ records: [], hints: [HINT_GEO] }));
+    const r = (await uisGetDataHandler({} as Env)({ indicators: ["LR.AG15T99"], geo_units: ["ZZZ"] })) as {
+      content: Array<{ text: string }>;
+      isError?: boolean;
+    };
+    expect(r.isError).toBe(true);
+    expect(r.content[0]?.text).toContain("The geoUnit could not be found");
+  });
+
+  it("período sem dado NÃO é erro — e a dica da fonte traz o intervalo disponível", async () => {
+    vi.stubGlobal("fetch", mockUisFetch({ records: [], hints: [HINT_PERIODO] }));
+    const r = (await uisGetDataHandler({} as Env)({
+      indicators: ["LR.AG15T99"],
+      geo_units: ["BRA"],
+      start_year: 1900,
+      end_year: 1901,
+    })) as { structuredContent: Record<string, unknown> };
+    expect(r.structuredContent.rows_count).toBe(0);
+    expect(String(r.structuredContent.hint)).toContain("start: 1970, end: 2024");
+    expect(String(r.structuredContent.hint)).toContain("reported by the UIS API");
+  });
+
+  it("caso MISTO: o dado real volta, e a ressalva viaja com ele", async () => {
+    // Medido: um indicador bom e um falso na mesma chamada devolvem
+    // `records: 2` MAIS a dica 001. Lançar aqui apagaria dado real; calar a
+    // dica faria um resultado parcial passar por completo.
+    vi.stubGlobal(
+      "fetch",
+      mockUisFetch({
+        records: [
+          { indicatorId: "LR.AG15T99", geoUnit: "BRA", year: 2015, value: 92.6, magnitude: null, qualifier: null },
+          { indicatorId: "LR.AG15T99", geoUnit: "BRA", year: 2016, value: 93.0, magnitude: null, qualifier: null },
+        ],
+        hints: [{ code: "UIS::HINT::001", message: "The indicator could not be found, XX.FALSO" }],
+      }),
+    );
+    const r = (await uisGetDataHandler({} as Env)({
+      indicators: ["LR.AG15T99", "XX.FALSO"],
+      geo_units: ["BRA"],
+    })) as { structuredContent: Record<string, unknown>; isError?: boolean };
+    expect(r.isError).toBeUndefined();
+    expect(r.structuredContent.rows_count).toBe(2);
+    const warnings = r.structuredContent.warnings as string[];
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("XX.FALSO");
+    expect(warnings[0]).toContain("only the codes that exist");
+  });
+
+  it("resposta sem ressalva nenhuma não ganha campo novo", async () => {
+    vi.stubGlobal(
+      "fetch",
+      mockUisFetch({
+        records: [{ indicatorId: "LR.AG15T99", geoUnit: "BRA", year: 2016, value: 93.0, magnitude: null, qualifier: null }],
+        hints: [],
+      }),
+    );
+    const r = (await uisGetDataHandler({} as Env)({ indicators: ["LR.AG15T99"], geo_units: ["BRA"] })) as {
+      structuredContent: Record<string, unknown>;
+    };
+    expect(r.structuredContent.rows_count).toBe(1);
+    expect(r.structuredContent).not.toHaveProperty("warnings");
+    expect(r.structuredContent).not.toHaveProperty("hint");
+  });
+});
+
 describe("noticesFromUisRecords", () => {
   it("agrega footnotes, magnitude e qualifier com contagem", () => {
     const notices = noticesFromUisRecords([

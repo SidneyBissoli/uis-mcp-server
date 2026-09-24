@@ -14,7 +14,13 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { UIS_LIMITS } from "../config.js";
 import { KEY_INDICATORS_URI } from "../resources.js";
-import { fetchUisData, UisUserError, type UisRecord } from "../uis/api.js";
+import {
+  fetchUisData,
+  mensagensDeDica,
+  mensagensDeInexistencia,
+  UisUserError,
+  type UisRecord,
+} from "../uis/api.js";
 import { searchUisCatalog, searchUisGeoUnits, UIS_THEMES, type UisTheme } from "../uis/catalog.js";
 import { provenance, uisDataVintage, uisProvenance } from "../uis/provenance.js";
 import type { Env } from "../types.js";
@@ -169,13 +175,15 @@ export function uisGetDataHandler(env: Env) {
             "Split the indicators into batches.",
         );
       }
-      const { records, retrievedAt, sourceUrl, release } = await fetchUisData(env, {
+      const { records, hints, retrievedAt, sourceUrl, release } = await fetchUisData(env, {
         indicators: args.indicators,
         geoUnits: args.geo_units,
         start: args.start_year,
         end: args.end_year,
         footnotes: args.include_footnotes,
       });
+      const dicasDaFonte = mensagensDeDica(hints);
+      const inexistentes = mensagensDeInexistencia(hints);
       if (records.length > UIS_LIMITS.maxRecordsPerResponse) {
         // Nunca truncar silenciosamente: dado parcial apresentado como completo
         // viola o contrato anti-alucinação. Erro pedagógico com a contagem real.
@@ -200,12 +208,29 @@ export function uisGetDataHandler(env: Env) {
         columns: ["indicator", "geo_unit", "year", "value"],
         rows_count: rows.length,
         rows,
+        // A dica é da FONTE quando a fonte tem uma. Até 24/09/2026 saía sempre a
+        // mesma frase genérica, e para código inexistente ela dizia o oposto do
+        // que a UIS respondera. Quando o código não existe a chamada nem chega
+        // aqui — `fetchUisData` lança —, então o que sobra é ausência de
+        // cobertura, e a dica da fonte (HINT::004) ainda traz o intervalo
+        // disponível do indicador, que a nossa nunca teve.
         ...(rows.length === 0
           ? {
               hint:
-                "No records for this selection. Check the indicator codes with uis_search_indicators " +
-                "and the geo unit codes with uis_list_geo_units — many indicators do not cover all " +
-                "countries or years.",
+                dicasDaFonte.length > 0
+                  ? `${dicasDaFonte.join(" ")} (reported by the UIS API)`
+                  : "No records for this selection. Check the indicator codes with uis_search_indicators " +
+                    "and the geo unit codes with uis_list_geo_units — many indicators do not cover all " +
+                    "countries or years.",
+            }
+          : {}),
+        // Caso MISTO: parte dos códigos pedidos não existe, e o resto devolveu
+        // dado. Sem esta ressalva o resultado parcial passa por completo.
+        ...(rows.length > 0 && inexistentes.length > 0
+          ? {
+              warnings: inexistentes.map(
+                (m) => `${m} (reported by the UIS API — the rows below cover only the codes that exist)`,
+              ),
             }
           : {}),
       };
@@ -324,7 +349,11 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         "uis_list_geo_units) and year range. Set include_footnotes for per-record source notes. " +
         "Returns raw UIS records only — it does not aggregate, convert or otherwise transform " +
         "values; ILO labour statistics live in the sibling ILOSTAT MCP server. Broad queries " +
-        "are rejected with the record count — narrow by geo unit or years.",
+        "are rejected with the record count — narrow by geo unit or years. A code that does not " +
+        "exist is an error carrying the UIS API's own wording, never an empty result: zero rows " +
+        "means the codes are real and the selection has no data, and the hint then relays what " +
+        "the UIS reported (including the indicator's available year range). When only SOME of the " +
+        "requested codes exist, the matching rows are returned with `warnings` naming the rest.",
       inputSchema: z.object({
         indicators: z
           .array(z.string().min(1))

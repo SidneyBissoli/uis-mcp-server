@@ -50,7 +50,7 @@ import {
 import { classifyError } from "../call-shape.js";
 import { KEY_INDICATORS } from "../resources.js";
 import type { Env } from "../types.js";
-import { fetchUisData, type UisRecord } from "../uis/api.js";
+import { fetchUisData, mensagensDeDica, type UisRecord } from "../uis/api.js";
 import { listUisCatalog, UIS_CATALOG_SOURCE_URL, type UisCatalogRow } from "../uis/catalog.js";
 import { provenanceExtras, uisDataVintage, uisProvenance } from "../uis/provenance.js";
 import { askedWordsFor } from "../uis/vocabulary.js";
@@ -192,7 +192,12 @@ function fmt(value: number | null): string {
   return Number.isInteger(value) ? value.toLocaleString("en-US") : value.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 
-export function renderIndicator(row: UisCatalogRow, sample: readonly UisRecord[] | null): string {
+export function renderIndicator(
+  row: UisCatalogRow,
+  sample: readonly UisRecord[] | null,
+  /** As dicas da própria UIS sobre esta amostra (ver `UisHint` em uis/api.ts). */
+  dicasDaFonte: readonly string[] = [],
+): string {
   // The curated note only earns a line when it says more than the name does.
   const note = CURATED.get(row.code);
   const curated = note && note.toLowerCase() !== row.name.toLowerCase() ? note : undefined;
@@ -201,7 +206,15 @@ export function renderIndicator(row: UisCatalogRow, sample: readonly UisRecord[]
   if (sample) {
     sampleLines.push("", `## Sample (${SAMPLE_GEO_UNITS.join(", ")}; latest ${SAMPLE_YEARS} years)`);
     if (sample.length === 0) {
-      sampleLines.push("No records for this selection — the indicator may not cover these geo units or years.");
+      // A palavra da fonte na frente da nossa: quando a UIS explica a ausência
+      // (HINT::004 traz o intervalo disponível do indicador), é isso que serve.
+      // Código inexistente nem chega aqui — `fetchUisData` lança na borda —,
+      // então a frase de cobertura abaixo só sobra para ausência de verdade.
+      sampleLines.push(
+        dicasDaFonte.length > 0
+          ? `${dicasDaFonte.join(" ")} (reported by the UIS API)`
+          : "No records for this selection — the indicator may not cover these geo units or years.",
+      );
     } else {
       sampleLines.push("| geo_unit | year | value |", "|---|---|---|");
       for (const r of sample) {
@@ -283,7 +296,7 @@ export function deepResearchHandlers(env: Env) {
     }
 
     const start = row.year_max - (SAMPLE_YEARS - 1);
-    const { records, retrievedAt, sourceUrl, release } = await fetchUisData(env, {
+    const { records, hints, retrievedAt, sourceUrl, release } = await fetchUisData(env, {
       indicators: [row.code],
       geoUnits: [...SAMPLE_GEO_UNITS],
       start,
@@ -299,7 +312,7 @@ export function deepResearchHandlers(env: Env) {
       notices: noticesFromUisRecords(records),
     });
     return {
-      document: { id, title: row.name, text: renderIndicator(row, records), url, metadata },
+      document: { id, title: row.name, text: renderIndicator(row, records, mensagensDeDica(hints)), url, metadata },
       extras: provenanceExtras(p),
     };
   }

@@ -122,8 +122,47 @@ export interface UisDataQuery {
   footnotes?: boolean | undefined;
 }
 
+/**
+ * A dica que o PRÓPRIO upstream manda junto da resposta. Medido em 24/09/2026
+ * — a API distingue três ausências, com código para cada uma, e o servidor
+ * jogava as três fora:
+ *
+ *   001  "The indicator could not be found, XX.INDICADOR.FALSO"
+ *   003  "The geoUnit could not be found, ZZZ"
+ *   004  "No data for the given time range, available time range for
+ *         indicator LR.AG15T99= start: 1970, end: 2024"
+ *
+ * As duas primeiras dizem que o CÓDIGO não existe; a terceira, que o código
+ * existe e não tem dado naquele recorte. São conclusões opostas, e até
+ * 24/09/2026 o servidor respondia às três com a mesma frase — "many indicators
+ * do not cover all countries or years" —, que afirma o contrário da fonte para
+ * as duas primeiras.
+ */
+export interface UisHint {
+  code?: string;
+  message?: string;
+}
+
+/** Os códigos em que a fonte diz "esse identificador não existe". */
+export const UIS_HINTS_INEXISTENCIA = new Set(["UIS::HINT::001", "UIS::HINT::003"]);
+
+/** As mensagens de inexistência da resposta, na palavra da própria fonte. */
+export function mensagensDeInexistencia(hints: readonly UisHint[]): string[] {
+  return hints
+    .filter((h) => h.code !== undefined && UIS_HINTS_INEXISTENCIA.has(h.code))
+    .map((h) => h.message?.trim())
+    .filter((m): m is string => Boolean(m));
+}
+
+/** Toda mensagem de dica da resposta, inexistência ou não. */
+export function mensagensDeDica(hints: readonly UisHint[]): string[] {
+  return hints.map((h) => h.message?.trim()).filter((m): m is string => Boolean(m));
+}
+
 export interface UisDataWithOrigin {
   records: UisRecord[];
+  /** As dicas que a fonte mandou — vazio quando ela não tem ressalva nenhuma. */
+  hints: UisHint[];
   retrievedAt: string;
   /** URL canônica que reproduz a consulta, com a release fixada (vai na proveniência). */
   sourceUrl: string;
@@ -163,6 +202,25 @@ export async function fetchUisData(env: Env, query: UisDataQuery): Promise<UisDa
   if (!res.ok) {
     throw new UisUpstreamError(res.status, `data ${query.indicators.join(",")}`, (await res.text()).slice(0, 300));
   }
-  const body = (await res.json()) as { records?: UisRecord[] };
-  return { records: body.records ?? [], retrievedAt, sourceUrl: url, release };
+  const body = (await res.json()) as { records?: UisRecord[]; hints?: UisHint[] };
+  const records = body.records ?? [];
+  const hints = body.hints ?? [];
+  // Ausência na BORDA DA REDE, não no formatador. Quando a fonte diz que o
+  // identificador não existe E não sobrou registro nenhum, a resposta honesta é
+  // a dela — não um zero com conselho de cobertura. O caso MISTO (medido: um
+  // indicador bom e um falso devolvem `records: 2` + a dica 001) NÃO cai aqui:
+  // lançar apagaria dado real. Ali a ressalva viaja com os dados, em `warnings`.
+  const inexistencia = mensagensDeInexistencia(hints);
+  if (records.length === 0 && inexistencia.length > 0) {
+    // A frase da fonte vem na frente, mas a CLASSE tem de sair das nossas
+    // palavras: a guarda de `call-shape` varre estas mensagens com o texto
+    // interpolado substituído, e o que a UIS escreve ("could not be found") não
+    // casa com o vocabulário do classificador. "was not found" casa, e a
+    // mensagem cai em `nao_encontrado` — não em `outro`.
+    throw new UisUserError(
+      `${inexistencia.join(" ")} This code was not found in the current UIS release — ` +
+        "check it with uis_search_indicators (indicators) or uis_list_geo_units (geo units).",
+    );
+  }
+  return { records, hints, retrievedAt, sourceUrl: url, release };
 }

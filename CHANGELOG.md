@@ -6,6 +6,41 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [Não publicado]
+
+### Corrigido
+
+- **Código inexistente devolvia zero linhas com um conselho que dizia o
+  CONTRÁRIO do que a fonte respondera.** Medido em 24/09/2026 (item
+  `mcp:ausencia-com-200` do portfólio). A Data API da UNESCO distingue três
+  ausências, com código próprio para cada uma, e o servidor jogava as três fora
+  para responder sempre a mesma frase — *"many indicators do not cover all
+  countries or years"*:
+
+  | dica da fonte | o que ela diz | o que saía |
+  |---|---|---|
+  | `UIS::HINT::001` | *The indicator could not be found, XX.INDICADOR.FALSO* | "o indicador pode não cobrir esses países ou anos" |
+  | `UIS::HINT::003` | *The geoUnit could not be found, ZZZ* | idem |
+  | `UIS::HINT::004` | *No data for the given time range, available time range for indicator LR.AG15T99= start: 1970, end: 2024* | idem, **sem** o intervalo disponível |
+
+  Nas duas primeiras o código **não existe**, e quem perguntava saía achando
+  que existia e não tinha cobertura. A defesa foi para a **borda da rede**
+  (`fetchUisData`), não para os formatadores: os `hints` passam a ser lidos, e
+  ausência de identificador com zero registro vira `UisUserError` com a frase
+  da própria UIS na frente. Os dois sítios que repetiam a frase enganosa
+  (`uis_get_data` e o `fetch` do Deep Research) passam a relatar a dica da
+  fonte — que no caso 004 ainda traz o intervalo de anos que a nossa nunca
+  teve.
+
+  O caso **misto** foi medido e tratado à parte: pedir um indicador bom e um
+  falso na mesma chamada devolve `records: 2` **mais** a dica 001. Lançar ali
+  apagaria dado real, e calar a dica faria um resultado parcial passar por
+  completo — então os dados voltam com `warnings` nomeando os códigos que não
+  existem.
+
+  **Mudança de superfície:** a descrição de `uis_get_data` passa a documentar
+  as três respostas (erro, zero com a dica da fonte, dados com `warnings`).
+
 ## [0.6.0] — 2026-09-23
 
 Esta versão carrega tudo o que entrou desde a 0.4.0: a 0.5.0 foi numerada no
