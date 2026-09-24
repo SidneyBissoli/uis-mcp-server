@@ -6,7 +6,13 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
-## [Não publicado]
+## [0.7.0] — 2026-09-24
+
+Bump MINOR porque a superfície publicada muda: a descrição de `uis_get_data`
+passa a documentar as três respostas de ausência (erro com a frase da fonte,
+zero com a dica da fonte, dados com `warnings`). A tag leva o master inteiro, e
+a **0.5.0 e a 0.6.0 foram numeradas no `package.json` e nunca viraram release** —
+quem estiver na 0.4.0 do npm recebe tudo de uma vez.
 
 ### Corrigido
 
