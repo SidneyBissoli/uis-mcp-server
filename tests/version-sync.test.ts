@@ -45,6 +45,14 @@ describe("versão sincronizada entre package.json e seus espelhos", () => {
     }
   });
 
+  it("lhm.plugin.json (a ficha do LobeHub) espelha a versão do package.json", () => {
+    // O LobeHub só ingere o que `lhm plugin update` publica: a ficha ficou
+    // parada na 0.1.0 com o produto na 1.0.0 (25/09/2026). O espelho está no
+    // sync-version.mjs; este caso é o que impede a deriva de voltar calada.
+    const lhm = JSON.parse(read("lhm.plugin.json")) as { version?: string };
+    expect(lhm.version).toBe(pkg.version);
+  });
+
   it("a constante de runtime espelha a versão, onde existe", () => {
     for (const file of ["src/version.ts", "src/config.ts"]) {
       if (!existsSync(join(root, file))) continue;

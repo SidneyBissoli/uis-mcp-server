@@ -6,6 +6,22 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [Unreleased]
+
+### Adicionado
+
+- **Ficha do LobeHub derivada da superfície.** `lhm.plugin.json` (identidade,
+  endpoint hospedado, tools e resources) e `scripts/gen-lhm-manifest.mjs`, que
+  o regenera a partir do dump stdio — o mesmo dos baselines. Medido em
+  25/09/2026: a ficha `sidneybissoli-uis-mcp-server` no LobeHub tinha nascido de
+  uma leitura automática do repositório em 08/08 (0.1.0, instalação "clonar e
+  semear", zero tools) e estava "Unvalidated" — sem letra no badge — enquanto o
+  produto chegava à 1.0.0 e os irmãos com manifesto tinham letra A. O LobeHub não
+  relê o repositório: só ingere o que `lhm plugin update` publica. A versão do
+  manifesto entrou no espelho de `scripts/sync-version.mjs` (hook `version`), e
+  `tests/lhm-manifest.test.ts` compara o arquivo com o `tools/list` real e com a
+  identidade do `server.json` — manifesto velho reprova antes do release.
+
 ## [1.0.0] — 2026-09-25
 
 Primeira versão **major**. A superfície publicada não muda: o dump stdio da
