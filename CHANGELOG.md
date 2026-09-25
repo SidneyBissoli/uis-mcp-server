@@ -6,6 +6,39 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.0.0] — 2026-09-25
+
+Primeira versão **major**. A superfície publicada não muda: o dump stdio da
+1.0.0 contra o baseline de produção da 0.3.0 tem UMA diferença, a descrição
+de `uis_get_data`, que é a mudança já publicada na 0.7.0. O número afirma que
+a superfície — 5 tools com `outputSchema` e gates de contrato de saída —
+passa a ser tratada como contrato: quebra de chamador vira major, e a
+convenção "superfície muda → minor" segue valendo abaixo disso. Decisão do
+dono em 25/09/2026 (item `mcp:mcpindex-100` do portfólio): o mcpindex dá os
+10 pontos de `stability` só a versão semver >= 1.0.0, e o uis estava em 95
+perdendo exatamente esses 5 e nada mais.
+
+### Corrigido
+
+- **A recusa de esquema deixava de ser contada — nem como chamada nem como
+  erro.** A reconciliação entre o hook de tools e a camada HTTP era por
+  status e supunha que 200 implica hook gravado; a recusa do zod é respondida
+  pelo SDK ANTES do handler, então ninguém gravava. Medido em produção em
+  24/09/2026: recusa de esquema (`isError`, sem código), ferramenta
+  inexistente (JSON-RPC −32602) e método inexistente (−32601) são três
+  formas em HTTP 200, e as três sumiam. A reconciliação passou a ser por NOME
+  contra um recibo do hook (contagem por nome, não `Set`), e o desfecho sai
+  do ENVELOPE da resposta casado por `id`, com `tee()` + `ctx.waitUntil` —
+  recusa de esquema → `contrato`, −32603 → `defeito`. Cópia do desenho
+  provado no `ilo` no mesmo dia. Só o Worker muda; o canal stdio não alcança
+  este código. (#17)
+
+### Verificação
+
+- 284 testes, `tsc --noEmit` e build limpos.
+- Superfície stdio da 1.0.0 = superfície da 0.7.0 (única diferença contra o
+  baseline 0.3.0 é a descrição de `uis_get_data`, publicada na 0.7.0).
+
 ## [0.7.0] — 2026-09-24
 
 Bump MINOR porque a superfície publicada muda: a descrição de `uis_get_data`
