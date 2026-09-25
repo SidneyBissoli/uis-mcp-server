@@ -30,6 +30,12 @@ if (!/^\d+\.\d+\.\d+/.test(version)) {
 
 const targets = [
   { file: "server.json", re: /("version":\s*")\d+\.\d+\.\d+[^"]*(")/g },
+  // O manifesto do LobeHub (a ficha que o diretório exibe) não acompanha o
+  // repositório: o LobeHub só ingere o que `lhm plugin update` publica, e a
+  // ficha do uis ficou parada na 0.1.0, "Unvalidated", enquanto o produto
+  // chegava à 1.0.0 (achado de 25/09/2026). A superfície é regenerada por
+  // scripts/gen-lhm-manifest.mjs; a VERSÃO entra aqui para nunca mais derivar.
+  { file: "lhm.plugin.json", re: /("version":\s*")\d+\.\d+\.\d+[^"]*(")/ },
   { file: "src/version.ts", re: /(export const VERSION = ")\d+\.\d+\.\d+[^"]*(")/ },
   { file: "src/config.ts", re: /(\bversion:\s*")\d+\.\d+\.\d+[^"]*(")/ },
 ];
