@@ -1,5 +1,7 @@
 # uis-mcp-server — servidor MCP provenance-first do UNESCO UIS
 
+[![smithery badge](https://smithery.ai/badge/sidneybissoli/uis-mcp-server)](https://smithery.ai/servers/sidneybissoli/uis-mcp-server)
+
 Servidor [MCP](https://modelcontextprotocol.io) (Streamable HTTP) para o **UNESCO
 UIS** (Instituto de Estatística da UNESCO — educação, ciência/P&D, cultura e
 comunicação), hospedado em Cloudflare Workers. Fase 2 do projeto ilostat
