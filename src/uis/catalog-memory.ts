@@ -24,6 +24,7 @@
  */
 
 import { nowIso, UIS_BASE, UisUserError, upstreamHeaders } from "./api.js";
+import { translateUpstreamError, upstreamCall } from "./upstream.js";
 import {
   UIS_CATALOG_SOURCE_URL,
   UIS_GEOUNITS_SOURCE_URL,
@@ -249,10 +250,18 @@ export class InMemoryUisCatalog {
   }
 }
 
+/**
+ * Uma das três respostas oficiais, pelo coletor da chamada que disparou o
+ * download (a primeira busca do stdio): política de rede do servidor e
+ * contagem no `retrieval`. A falha era um `Error` genérico que relançava;
+ * desde a 1.1.0 é `UisUpstreamError` — isError legível, classe `fonte`.
+ */
 async function getJson(url: string): Promise<unknown> {
-  const res = await fetch(url, { headers: upstreamHeaders() });
-  if (!res.ok) throw new Error(`UNESCO UIS catalogue HTTP ${res.status} (${url}): ${(await res.text()).slice(0, 200)}`);
-  return await res.json();
+  try {
+    return await upstreamCall().json(url, { headers: upstreamHeaders() });
+  } catch (e) {
+    throw translateUpstreamError(e, `catalogue ${url}`);
+  }
 }
 
 async function defaultLoader(): Promise<UisCatalogSnapshot> {

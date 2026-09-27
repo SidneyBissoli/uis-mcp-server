@@ -8,10 +8,25 @@
  *    explícita (release corrente resolvida de /versions/default, KV TTL 24 h);
  *  - teto upstream de 100.000 registros por consulta (HTTP 400 pedagógico com a
  *    contagem exata — a mensagem é repassada ao cliente).
+ *
+ * A ida à rede (timeout, retry, contagem para o `retrieval` da proveniência)
+ * é de `upstream.ts`, desde a 1.1.0; aqui fica o que a resposta SIGNIFICA.
  */
 
 import { UIS_LIMITS } from "../config.js";
 import type { Env } from "../types.js";
+import {
+  translateUpstreamError,
+  upstreamBody,
+  upstreamCall,
+  upstreamStatus,
+  USER_AGENT,
+  UisUpstreamError,
+} from "./upstream.js";
+
+// A classe vive em `upstream.ts` (nasce da tradução do erro do pacote); quem
+// sempre a importou daqui continua importando daqui.
+export { UisUpstreamError };
 
 export const UIS_BASE = "https://api.uis.unesco.org/api/public";
 export const UIS_API_VERSION = "1.0.2";
@@ -27,26 +42,27 @@ export class UisUserError extends Error {
   }
 }
 
-/** Erro do upstream UIS (não é uso errado da tool): status + trecho do corpo. */
-export class UisUpstreamError extends Error {
-  readonly status: number;
-  constructor(status: number, context: string, bodySnippet: string) {
-    super(`UNESCO UIS upstream HTTP ${status} (${context}): ${bodySnippet}`);
-    this.name = "UisUpstreamError";
-    this.status = status;
-  }
-}
-
 /** ISO-8601 sem milissegundos (formato canônico do contrato de proveniência). */
 export function nowIso(): string {
   return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
-const USER_AGENT = "uis-mcp-server (https://uis.sidneybissoli.com; sbissoli76@gmail.com)";
-
 /** Headers de toda chamada ao upstream — o mesmo User-Agent do seed (scripts/seed-uis-catalog.mjs). */
 export function upstreamHeaders(): Record<string, string> {
   return { "User-Agent": USER_AGENT };
+}
+
+/**
+ * UMA ida JSON à UIS pelo coletor da chamada corrente: política de rede do
+ * servidor, contagem no `retrieval`, e o erro do pacote traduzido para o que
+ * `tools/errors.ts` lê. `context` é o que a mensagem diz entre parênteses.
+ */
+async function getUisJson<T>(url: string, context: string): Promise<T> {
+  try {
+    return await upstreamCall().json<T>(url, { headers: upstreamHeaders() });
+  } catch (e) {
+    throw translateUpstreamError(e, context);
+  }
 }
 
 export interface UisRelease {
@@ -77,15 +93,13 @@ export async function getDefaultRelease(env: Env): Promise<UisReleaseWithOrigin>
   if (hit) return { release: hit.value, retrievedAt: hit.retrievedAt, servedFromCache: true };
 
   const url = `${UIS_BASE}/versions/default`;
-  const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
-  if (!res.ok) {
-    throw new UisUpstreamError(res.status, "default version", (await res.text()).slice(0, 300));
-  }
-  const body = (await res.json()) as {
+  // `!ok` de qualquer status (404 incluído) sempre foi `UisUpstreamError`
+  // aqui — a tradução do pacote preserva isso.
+  const body = await getUisJson<{
     version: string;
     publicationDate: string;
     themeDataStatus?: Array<{ theme: string; lastUpdate: string; description: string }>;
-  };
+  }>(url, "default version");
   const retrievedAt = nowIso();
   const release: UisRelease = {
     version: body.version,
@@ -188,21 +202,23 @@ export function uisDataUrl(query: UisDataQuery, version: string): string {
 export async function fetchUisData(env: Env, query: UisDataQuery): Promise<UisDataWithOrigin> {
   const { release } = await getDefaultRelease(env);
   const url = uisDataUrl(query, release.version);
-  const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+  let body: { records?: UisRecord[]; hints?: UisHint[] };
+  try {
+    body = await upstreamCall().json(url, { headers: upstreamHeaders() });
+  } catch (e) {
+    if (upstreamStatus(e) === 400) {
+      // O 400 do upstream é pedagógico (traz a contagem exata quando estoura o
+      // teto de 100k registros; medido em 27/09/2026: chega em 0,9 s, a UIS
+      // conta antes de servir) — repassa a mensagem e orienta os filtros da
+      // tool. O pacote não repete 4xx e entrega o corpo no erro.
+      throw new UisUserError(
+        `${mensagemDo400(upstreamBody(e)) ?? "The UIS API rejected the query (HTTP 400)."} ` +
+          "Narrow the query: fewer indicators, specific geo_units, or a shorter start/end year range.",
+      );
+    }
+    throw translateUpstreamError(e, `data ${query.indicators.join(",")}`);
+  }
   const retrievedAt = nowIso();
-  if (res.status === 400) {
-    // O 400 do upstream é pedagógico (traz a contagem exata quando estoura o teto
-    // de 100k registros) — repassa a mensagem e orienta os filtros da tool.
-    const body = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new UisUserError(
-      `${body?.message ?? "The UIS API rejected the query (HTTP 400)."} ` +
-        "Narrow the query: fewer indicators, specific geo_units, or a shorter start/end year range.",
-    );
-  }
-  if (!res.ok) {
-    throw new UisUpstreamError(res.status, `data ${query.indicators.join(",")}`, (await res.text()).slice(0, 300));
-  }
-  const body = (await res.json()) as { records?: UisRecord[]; hints?: UisHint[] };
   const records = body.records ?? [];
   const hints = body.hints ?? [];
   // Ausência na BORDA DA REDE, não no formatador. Quando a fonte diz que o
@@ -223,4 +239,15 @@ export async function fetchUisData(env: Env, query: UisDataQuery): Promise<UisDa
     );
   }
   return { records, hints, retrievedAt, sourceUrl: url, release };
+}
+
+/** A `message` do corpo JSON do 400 da UIS; `undefined` se o corpo não for esse JSON. */
+function mensagemDo400(body: string | undefined): string | undefined {
+  if (!body) return undefined;
+  try {
+    const parsed = JSON.parse(body) as { message?: unknown } | null;
+    return typeof parsed?.message === "string" ? parsed.message : undefined;
+  } catch {
+    return undefined;
+  }
 }

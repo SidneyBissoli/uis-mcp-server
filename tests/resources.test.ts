@@ -146,7 +146,7 @@ describe("o guia diz a verdade sobre os limites", () => {
 describe("o contrato de proveniência", () => {
   it("nomeia os campos que as tools de fato devolvem", () => {
     const md = provenanceMarkdown();
-    for (const campo of ["source_url", "data_vintage", "retrieved_at", "license", "citation", "derived"]) {
+    for (const campo of ["source_url", "data_vintage", "retrieved_at", "retrieval", "license", "citation", "derived"]) {
       expect(md).toContain(campo);
     }
   });

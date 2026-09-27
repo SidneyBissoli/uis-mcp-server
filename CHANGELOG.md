@@ -6,9 +6,50 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
-## [Unreleased]
+## [1.1.0] — 2026-09-27
+
+Versão **minor**: a superfície muda num nó só — o `provenance` do `outputSchema`
+das 5 tools deixa de ser `{}` e passa a ser a forma publicada pelo contrato
+v1.1 (`baselines/surface-stdio-1.1.0.json` contra `surface-stdio-1.0.0.json`,
+gravado nesta versão como primeiro baseline stdio: 11 diferenças, todas no
+`provenance` e na descrição do recurso `uis://reference/provenance`).
 
 ### Adicionado
+
+- **Fetch comum com timeout, retry e diagnóstico de origem** (`src/uis/upstream.ts`,
+  sobre `@sbissoli/mcp-upstream` 0.3.0). Até a 1.0.0 nenhuma das três idas à
+  UIS (release corrente, dados, catálogo em memória do stdio) tinha timeout,
+  retry ou `AbortSignal`. Política **medida** contra a API viva em 27/09/2026
+  (release 1,1 s; consulta pequena 0,8 s; cinco indicadores inteiros 2,9 s e
+  3,5 MB; o 400 do teto de 100k registros chega em 0,9 s — a UIS conta antes
+  de servir; nenhum 504 observado): 35 s por tentativa (acima dos 29 s do API
+  Gateway da AWS que está na frente da UIS), até 3 tentativas em 5xx, 429 com
+  `Retry-After` e falha de rede, backoff 1 s → 4 s, 45 s por chamada. Timeout,
+  HTTP 504, o 400 pedagógico e 404 não repetem; 200 que não é JSON não repete
+  (paridade — nunca medido na UIS).
+- **`retrieval` no bloco de proveniência** (contrato v1.1, `@sbissoli/mcp-provenance`
+  0.2.0): idas, tentativas, anomalias superadas e `unstable`, medidos por
+  chamada — o coletor abre em `withUsage` para as tools `uis_*` e nos próprios
+  handlers de `search`/`fetch`. `null` quando nada foi à UIS (catálogo D1,
+  release em cache). Os três downloads paralelos do catálogo do stdio contam
+  como 3 idas na primeira busca.
+- `tests/upstream.test.ts` (18 testes): política, tradução do erro e a
+  contagem pelo servidor inteiro, com o backoff calado e contado.
+
+### Alterado
+
+- **Timeout e falha de rede viram erro legível**, não exceção crua: antes o
+  `TypeError` do fetch escapava como erro JSON-RPC e a telemetria o gravava
+  como `defeito`; agora é `UisUpstreamError` com status 0 ("upstream
+  unreachable … retrying later may succeed"), classe `fonte`. O erro genérico
+  do catálogo em memória ("UNESCO UIS catalogue HTTP …") vira o mesmo erro.
+- `UisUpstreamError` passa a viver em `src/uis/upstream.ts` (reexportada por
+  `api.ts`); `USER_AGENT` idem.
+- `outputSchema`: `provenance` é a união `ConciseBlockSchema | DetailedBlockSchema`
+  do pacote (nunca transcrita), com descrição em inglês.
+- Recurso `uis://reference/provenance` e README documentam `retrieval` e a política.
+
+### Adicionado (pendente desde a 1.0.0)
 
 - **Ficha do LobeHub derivada da superfície.** `lhm.plugin.json` (identidade,
   endpoint hospedado, tools e resources) e `scripts/gen-lhm-manifest.mjs`, que
