@@ -6,7 +6,7 @@
  * Browser, regime que governa a Data API — a própria documentação da API declara
  * a licença). Atribuição obrigatória com URL completa + data de extração.
  *
- * Segregação (contrato v1.0, §Segregação): este servidor serve EXCLUSIVAMENTE a
+ * Segregação (contrato v1.1, §Segregação): este servidor serve EXCLUSIVAMENTE a
  * UIS — a segregação CC BY / CC BY-SA em relação ao ILOSTAT (servidor irmão
  * ilo-mcp-server) é estrutural: os dois regimes nunca coabitam um servidor.
  */
@@ -14,6 +14,7 @@
 import { createProvenanceContext, type CanonicalProvenance } from "@sbissoli/mcp-provenance";
 import { PROVENANCE_OPTIONS } from "../config.js";
 import { UIS_API_VERSION, UIS_BASE, type UisRelease } from "./api.js";
+import { currentRetrieval } from "./upstream.js";
 
 export const provenance = createProvenanceContext(PROVENANCE_OPTIONS);
 
@@ -49,7 +50,13 @@ export interface UisProvenanceInput {
   notices?: string[];
 }
 
-/** Bloco canônico v1.0 para uma resposta da UIS. */
+/**
+ * Bloco canônico v1.1 para uma resposta da UIS. `retrieval` é o que o
+ * coletor da chamada mediu (idas, tentativas, anomalias — `upstream.ts`);
+ * `null` quando nada foi à origem (catálogo D1, acerto de KV) ou fora de um
+ * coletor. `retrieved_at` continua sendo o instante da extração original,
+ * vindo do KV no acerto — não é o do coletor.
+ */
 export function uisProvenance(input: UisProvenanceInput): CanonicalProvenance {
   return provenance.build({
     source: {
@@ -68,6 +75,7 @@ export function uisProvenance(input: UisProvenanceInput): CanonicalProvenance {
     citation: uisCitation(input.sourceUrl, input.retrievedAt),
     ...(input.notices?.length ? { notices: input.notices } : {}),
     served_from_cache: input.servedFromCache ?? null,
+    retrieval: currentRetrieval(),
   });
 }
 

@@ -221,6 +221,15 @@ Every tool response carries a provenance block (contract v${CONTRACT_VERSION}). 
 - **\`retrieved_at\`** — when this server fetched from the UIS, in UTC. On a
   cached response it is the timestamp of the ORIGINAL fetch, not of the cache
   hit: \`served_from_cache\` tells the two apart.
+- **\`retrieval\`** (contract v1.1) — the origin diagnostic of this call, measured by the server:
+  \`requests\` (distinct calls made to the UIS Data API), \`attempts\` (including retries),
+  \`anomalies\` overcome on the way (\`timeout\`, \`network\`, \`rate_limited\`, \`http_5xx\`,
+  \`http_4xx\`, \`malformed_body\`, each with a count) and \`unstable\` — \`true\` when anything
+  had to be retried: treat the figures as obtained with difficulty and consider re-running
+  the query before relying on them. \`null\` when the answer did not touch the UIS (catalogue
+  search, cached release). Policy: 35 s per attempt, up to 3 attempts on transient failures,
+  45 s per call; timeouts, HTTP 504, HTTP 400 (the UIS's own "too much data" answer) and 404
+  are not retried.
 - **\`license\`** — ${UIS_LICENSE.id} (${UIS_LICENSE.name}), verified verbatim
   against the UIS terms on ${UIS_LICENSE.verified_at}: ${UIS_LICENSE.terms_url}
 - **\`citation\`** — the attribution string the UIS terms require, already
@@ -279,7 +288,7 @@ export function registerResources(server: McpServer): void {
       title: "Provenance and citation contract",
       description:
         "Meaning of every provenance field returned with the data (source_url, data_vintage, " +
-        "retrieved_at, license, citation, derived) and how to cite the UIS correctly, " +
+        "retrieved_at, retrieval, license, citation, derived) and how to cite the UIS correctly, " +
         "including what CC BY-SA ShareAlike requires downstream.",
       ...md,
     },

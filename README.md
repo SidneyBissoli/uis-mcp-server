@@ -26,11 +26,16 @@ ver [Rodar localmente](#rodar-localmente-stdio)).
 | `search` | contrato ChatGPT Deep Research: ranqueia a consulta contra o catálogo inteiro, devolve `{ id, title, url }` (`ind:<code>`) | índice em memória construído do catálogo D1 (24 h) |
 | `fetch` | contrato ChatGPT Deep Research: um indicador em Markdown legível (entrada do catálogo + amostra de dados) com a página pública do Data Browser como `url` | catálogo D1 + 1 chamada à Data API (amostra) |
 
-Toda resposta carrega o **bloco de proveniência v1.0** (`@sbissoli/mcp-provenance`,
+Toda resposta carrega o **bloco de proveniência v1.1** (`@sbissoli/mcp-provenance`,
 modos `concise`/`detailed` via parâmetro `provenance_mode`) nos três canais do
 contrato: `structuredContent`, `_meta` namespaced (`com.sidneybissoli.uis/*`) e
 rodapé de texto. Em `search`/`fetch` o canal de texto é o JSON do contrato
 Deep Research (sem rodapé); a proveniência viaja em `structuredContent` e `_meta`.
+Desde a 1.1.0 o bloco traz `retrieval`, o diagnóstico de origem da chamada —
+quantas idas foram à Data API, quantas tentativas custaram, que anomalias foram
+superadas e se a resposta é `unstable` —, medido pelo fetch comum do portfólio
+([`@sbissoli/mcp-upstream`](https://www.npmjs.com/package/@sbissoli/mcp-upstream));
+`null` quando a resposta não tocou a UIS (catálogo ou release em cache).
 
 ### Pergunte com as suas palavras, não com as da UNESCO
 
@@ -161,6 +166,15 @@ repositório constrói este runtime (para o registro Glama).
   anti-alucinação). Máx. 25 indicadores/chamada. Reavaliar com uso real.
 - **Notices** = tipos de footnote + magnitude + qualifier com contagem; o texto
   integral de cada footnote fica na linha (`include_footnotes: true`).
+- **Toda ida à UIS tem timeout e política de retry** (desde a 1.1.0, medida
+  contra a API viva em 27/09/2026: release 1,1 s, consulta pequena 0,8 s, cinco
+  indicadores inteiros 2,9 s/3,5 MB, o 400 do teto de 100k chega em 0,9 s):
+  35 s por tentativa — dez vezes o pior caso legítimo e acima dos 29 s do
+  API Gateway da AWS que está na frente da UIS —, até 3 tentativas em 5xx, 429
+  (honrando `Retry-After`) e falha de rede, 45 s no total por chamada. Timeout,
+  HTTP 504, o 400 pedagógico e 404 nunca repetem. O que aconteceu sai no campo
+  `retrieval` da proveniência; timeout e falha de rede viram erro legível
+  ("upstream unreachable … retrying later may succeed"), não exceção crua.
 - **Idioma do servidor: inglês; fuso: UTC** (persona internacional; dados da UIS são
   publicados em inglês). `derived` é sempre `false` — o servidor não transforma nada.
 

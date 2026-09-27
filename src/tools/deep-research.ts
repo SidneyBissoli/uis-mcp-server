@@ -53,6 +53,7 @@ import type { Env } from "../types.js";
 import { fetchUisData, mensagensDeDica, type UisRecord } from "../uis/api.js";
 import { listUisCatalog, UIS_CATALOG_SOURCE_URL, type UisCatalogRow } from "../uis/catalog.js";
 import { provenanceExtras, uisDataVintage, uisProvenance } from "../uis/provenance.js";
+import { withUpstreamCall } from "../uis/upstream.js";
 import { askedWordsFor } from "../uis/vocabulary.js";
 import type { RecordUsage } from "../usage-core.js";
 import { noticesFromUisRecords } from "./uis.js";
@@ -250,20 +251,33 @@ export function renderIndicator(
 
 // ==================== HANDLERS ====================
 
+/**
+ * Os dois handlers abrem o coletor de rede eles mesmos (`withUpstreamCall`):
+ * são registrados pelo `@sbissoli/mcp-search`, fora do `withUsage` que o abre
+ * para as tools `uis_*`. Sem isso o `retrieval` da proveniência deles sairia
+ * `null` — "não medido" — com a ida à UIS (catálogo em memória no primeiro
+ * uso do stdio, amostra da Data API no `fetch`) acontecendo de fato.
+ */
 export function deepResearchHandlers(env: Env) {
-  async function search(query: string): Promise<SearchReply> {
-    const idx = await getIndex(env);
-    const results = idx.index.search(query, { limit: DEEP_RESEARCH_LIMIT }).map(({ id, title, url }) => ({ id, title, url }));
-    const p = uisProvenance({
-      dataset: { id: "UIS indicator catalogue", version: idx.releaseVersion, name: "UNESCO UIS catalogue of indicators" },
-      retrievedAt: idx.retrievedAt,
-      sourceUrl: idx.sourceUrl,
-      servedFromCache: true,
+  function search(query: string): Promise<SearchReply> {
+    return withUpstreamCall(async () => {
+      const idx = await getIndex(env);
+      const results = idx.index.search(query, { limit: DEEP_RESEARCH_LIMIT }).map(({ id, title, url }) => ({ id, title, url }));
+      const p = uisProvenance({
+        dataset: { id: "UIS indicator catalogue", version: idx.releaseVersion, name: "UNESCO UIS catalogue of indicators" },
+        retrievedAt: idx.retrievedAt,
+        sourceUrl: idx.sourceUrl,
+        servedFromCache: true,
+      });
+      return { results, extras: provenanceExtras(p) };
     });
-    return { results, extras: provenanceExtras(p) };
   }
 
-  async function fetch(id: string): Promise<FetchReply | null> {
+  function fetch(id: string): Promise<FetchReply | null> {
+    return withUpstreamCall(() => fetchDocument(id));
+  }
+
+  async function fetchDocument(id: string): Promise<FetchReply | null> {
     if (!id.startsWith(DEEP_RESEARCH_ID_PREFIX)) return null;
     // Refuse unknown ids from the catalogue — the upstream is never asked about them.
     const idx = await getIndex(env);
