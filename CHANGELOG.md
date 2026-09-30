@@ -6,6 +6,23 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [Não publicado]
+
+Só telemetria do canal hospedado: nenhuma tool, parâmetro, campo ou mensagem
+muda.
+
+### Corrigido
+
+- **Toda falha da origem era gravada como erro de classe `contrato`.** Medido
+  em 30/09/2026 rodando o classificador sobre o texto que `toToolError` monta:
+  timeout, rede, abort, 429, 5xx, 4xx, 404 e corpo que não é JSON saíam
+  `contrato`, porque o sufixo "…not an invalid query…" casa `\binvalid` no
+  ramo de contrato — e `contrato` fica fora da taxa de erro do painel, então a
+  queda da UIS sumia da saúde. Agora `UisUpstreamError` nasce com a classe
+  (404 → `nao_encontrado`, o resto → `fonte`), ela viaja numa chave-símbolo
+  que não é serializada, e o hook a lê antes da frase. Mesmo conserto do
+  bcb-br-mcp (#45) e do ilo-mcp-server. Gate em `tests/classe-do-erro.test.ts`.
+
 ## [1.1.0] — 2026-09-27
 
 Versão **minor**: a superfície muda num nó só — o `provenance` do `outputSchema`
