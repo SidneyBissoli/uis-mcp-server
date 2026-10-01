@@ -47,7 +47,7 @@ import {
   type SearchIndex,
   type SearchReply,
 } from "@sbissoli/mcp-search";
-import { classifyError } from "../call-shape.js";
+import { classifyError, classifyThrown } from "../call-shape.js";
 import { KEY_INDICATORS } from "../resources.js";
 import type { Env } from "../types.js";
 import { fetchUisData, mensagensDeDica, type UisRecord } from "../uis/api.js";
@@ -351,6 +351,10 @@ export function registerDeepResearchTools(server: McpServer, env: Env, record: R
     // Sem ele o pacote grava os nomes dos parâmetros e deixa a classe
     // vazia, que foi o que a produção mostrou antes da 0.4.0.
     classifyError,
+    // A classe de uma EXCEÇÃO pelo tipo (mcp-search 0.8.0): `TypeError` nosso
+    // -> `defeito`. O erro da origem já declara a sua (`.classe`), e o pacote
+    // a lê antes deste e da frase.
+    classifyThrown,
     record,
   });
 }
