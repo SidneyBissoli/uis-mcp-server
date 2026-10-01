@@ -10,12 +10,15 @@
  * certa; o texto MONTADO é que não estava.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { UpstreamError, type UpstreamErrorKind } from "@sbissoli/mcp-upstream";
 import { translateUpstreamError } from "../src/uis/upstream.js";
 import { UisUserError } from "../src/uis/api.js";
 import { withToolErrors } from "../src/tools/errors.js";
 import { withUsage } from "../src/usage-wrap.js";
+import { uisGetDataHandler } from "../src/tools/uis.js";
+import { CLASSE_DO_ERRO } from "../src/call-shape.js";
+import type { Env } from "../src/types.js";
 
 async function classeGravada(erro: unknown): Promise<{ classe: string; result: unknown }> {
   const classes: string[] = [];
@@ -74,11 +77,75 @@ describe("o que não é falha da origem continua como era", () => {
     expect((await classeGravada(falha("not_found", 404))).classe).toBe("nao_encontrado");
   });
 
-  it("erro de USO segue classificado pela própria frase (aqui, instrução ao chamador)", async () => {
+  it("erro de USO é `contrato` por declaração (a instrução ao chamador)", async () => {
     const { classe } = await classeGravada(
       new UisUserError("The query is too broad. Narrow it: fewer areas (maximum 30 per call)."),
     );
     expect(classe).toBe("contrato");
+  });
+});
+
+/**
+ * Erro de USO com a classe DECLARADA, atravessando o handler real da tool
+ * (fetch trocado por stub, nenhuma rede). Antes, `toToolError` devolvia o
+ * erro de uso sem classe e o hook caía na frase — que ecoa o argumento.
+ */
+describe("erro de uso: a classe é a declarada, não a da frase", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const RELEASE = {
+    version: "20260507-91260335",
+    publicationDate: "2026-05-08T16:58:36.233Z",
+    themeDataStatus: [{ theme: "EDUCATION", lastUpdate: "02/09/2026", description: "February 2026 Data Release" }],
+  };
+
+  function stubUis(dataBody: unknown, dataStatus = 200) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) =>
+        String(input).includes("/versions/default")
+          ? new Response(JSON.stringify(RELEASE), { status: 200 })
+          : new Response(JSON.stringify(dataBody), { status: dataStatus }),
+      ),
+    );
+  }
+
+  async function classeDoGetData(args: { indicators: string[]; geo_units?: string[] }) {
+    const classes: string[] = [];
+    const h = withUsage(
+      "uis_get_data",
+      (kind, _n, forma) => {
+        if (kind === "tool_error" && forma) classes.push(forma.classe);
+      },
+      uisGetDataHandler({} as Env),
+    );
+    const result = await h(args);
+    expect(classes).toHaveLength(1);
+    return { classe: classes[0] ?? "", result };
+  }
+
+  it("RISCO: código que a UIS diz não existir é `nao_encontrado`, mesmo ecoando \"LR.INVALID\"", async () => {
+    stubUis({
+      records: [],
+      hints: [{ code: "UIS::HINT::001", message: "The indicator could not be found, LR.INVALID" }],
+    });
+    const { classe, result } = await classeDoGetData({ indicators: ["LR.INVALID"], geo_units: ["BRA"] });
+    expect(JSON.stringify(result)).toContain("LR.INVALID");
+    expect(JSON.stringify(result)).toContain("was not found in the current UIS release");
+    expect(classe).toBe("nao_encontrado");
+  });
+
+  it("400 da UIS (recorte grande demais) é `contrato`, declarado", async () => {
+    stubUis({ message: "The query would return 250000 records, more than the 100000 limit." }, 400);
+    const { classe, result } = await classeDoGetData({ indicators: ["CR.1"] });
+    expect(JSON.stringify(result)).toContain("Narrow the query");
+    expect(classe).toBe("contrato");
+  });
+
+  it("o erro de uso também leva a classe anexada, fora do fio", async () => {
+    const { result } = await classeGravada(new UisUserError("Empty query: pass one or more search terms."));
+    expect((result as { [CLASSE_DO_ERRO]?: unknown })[CLASSE_DO_ERRO]).toBe("contrato");
+    expect(Object.keys(result as object).sort()).toEqual(["content", "isError"]);
   });
 });
 
