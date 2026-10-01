@@ -13,6 +13,7 @@
  * é de `upstream.ts`, desde a 1.1.0; aqui fica o que a resposta SIGNIFICA.
  */
 
+import type { ErrorClass } from "../call-shape.js";
 import { UIS_LIMITS } from "../config.js";
 import type { Env } from "../types.js";
 import {
@@ -34,11 +35,20 @@ export const UIS_API_VERSION = "1.0.2";
 /**
  * Erro de USO da tool (não é falha do servidor nem do upstream): a mensagem é
  * pedagógica e volta intacta ao cliente como isError.
+ *
+ * A classe nasce com o erro (ver `CLASSE_DO_ERRO` em call-shape.ts) e
+ * `toToolError` a anexa ao resultado: o hook não cai na frase. Padrão
+ * `contrato` (culpa de quem chamou); quem lança por OUTRO motivo — a UIS
+ * respondeu que o código não existe — declara a classe no construtor. Sem
+ * isso, o código ecoado na frase decidia: `LR.INVALID` casava `invalid` e
+ * saía `contrato`.
  */
 export class UisUserError extends Error {
-  constructor(message: string) {
+  readonly classe: ErrorClass;
+  constructor(message: string, classe: ErrorClass = "contrato") {
     super(message);
     this.name = "UisUserError";
+    this.classe = classe;
   }
 }
 
@@ -214,6 +224,8 @@ export async function fetchUisData(env: Env, query: UisDataQuery): Promise<UisDa
       throw new UisUserError(
         `${mensagemDo400(upstreamBody(e)) ?? "The UIS API rejected the query (HTTP 400)."} ` +
           "Narrow the query: fewer indicators, specific geo_units, or a shorter start/end year range.",
+        // Declarado, não pelo padrão por acaso: a UIS recusou o recorte pedido.
+        "contrato",
       );
     }
     throw translateUpstreamError(e, `data ${query.indicators.join(",")}`);
@@ -228,14 +240,15 @@ export async function fetchUisData(env: Env, query: UisDataQuery): Promise<UisDa
   // lançar apagaria dado real. Ali a ressalva viaja com os dados, em `warnings`.
   const inexistencia = mensagensDeInexistencia(hints);
   if (records.length === 0 && inexistencia.length > 0) {
-    // A frase da fonte vem na frente, mas a CLASSE tem de sair das nossas
-    // palavras: a guarda de `call-shape` varre estas mensagens com o texto
-    // interpolado substituído, e o que a UIS escreve ("could not be found") não
-    // casa com o vocabulário do classificador. "was not found" casa, e a
-    // mensagem cai em `nao_encontrado` — não em `outro`.
+    // A classe é DECLARADA (`nao_encontrado`: a fonte respondeu que não
+    // existe). Pela frase, a dica da UIS vem na frente e ecoa o código pedido:
+    // com `LR.INVALID`, `invalid` casava antes de "was not found" e saía
+    // `contrato`. "was not found" fica no texto para o leitor e para a guarda
+    // de `call-shape`, que varre estas mensagens.
     throw new UisUserError(
       `${inexistencia.join(" ")} This code was not found in the current UIS release — ` +
         "check it with uis_search_indicators (indicators) or uis_list_geo_units (geo units).",
+      "nao_encontrado",
     );
   }
   return { records, hints, retrievedAt, sourceUrl: url, release };
