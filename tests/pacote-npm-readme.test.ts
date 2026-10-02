@@ -25,7 +25,7 @@ describe("README no pacote do npm", () => {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     });
-    const [pacote] = JSON.parse(saida) as Array<{ files: Array<{ path: string }> }>;
+    const [pacote] = JSON.parse(saida) as [{ files: Array<{ path: string }> }];
     const readmes = pacote.files.map((f) => f.path).filter((p) => /^readme/i.test(p));
     expect(readmes, "o npm exibe um README só; com dois, escolheu o traduzido").toEqual(["README.md"]);
   }, 60_000);
