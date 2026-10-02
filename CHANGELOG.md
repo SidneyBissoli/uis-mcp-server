@@ -8,8 +8,21 @@ Registry; a superfície de cada versão está em `baselines/`.
 
 ## [Não publicado]
 
-Só telemetria do canal hospedado: nenhuma tool, parâmetro, campo ou mensagem
-muda.
+Telemetria do canal hospedado e uma trava de CI: nenhuma tool, parâmetro, campo
+ou mensagem muda — agora afirmado por teste (`surface.lock.json`).
+
+### Adicionado
+
+- **Impressão digital da superfície: mudou sem subir a versão = build vermelho
+  e deploy recusado** (`@sbissoli/mcp-surface`). `surface.lock.json` trava o
+  sha256 de `initialize` (instructions, capabilities, identidade sem a versão)
+  + tools/resources/templates/prompts e, numa segunda seção, QUAIS MÉTODOS
+  RESPONDEM SEM TOKEN em `/mcp` e na rota privada, com e sem `API_KEY`.
+  `tests/surface-lock.test.ts` fica vermelho se a superfície mudar sob a mesma
+  versão, e `npm run surface:lock` se recusa a regravar. O deploy, que já
+  rodava os testes antes do wrangler, termina conferindo o endpoint no ar
+  contra a trava (`mcp-surface verificar`). Proposta de um leitor (dev.to,
+  3g5m4 e 3g607); molde no bcb-br-mcp.
 
 ### Corrigido
 
