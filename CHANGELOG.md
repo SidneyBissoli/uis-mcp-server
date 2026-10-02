@@ -6,6 +6,26 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.2.1] — 2026-10-02
+
+Versão **patch**, só de documentação: leva ao npm o README novo (a página do
+pacote mostra o README da última release). Nenhuma tool, resource, parâmetro,
+campo ou mensagem muda — a superfície é a da 1.2.0 (`surface.lock.json`
+inalterado).
+
+### Documentação
+
+- **README em inglês, com par em português** (`README.pt-BR.md`), no molde do
+  `ilo-mcp-server` (#28). "UNESCO Institute for Statistics (UIS)" e "UIS Data
+  API" por extenso; saem as notas internas do projeto.
+- **Comparação com as alternativas**, versões medidas em 2026-10-02: uisapi
+  0.1.1 (R), unesco-reader 3.1.1 (Python), global-education-mcp 0.4.0, clientes
+  WDI do Banco Mundial, os arquivos em lote da UIS e a Data API. SDMX entra só
+  como aposentado: a UIS declarou o fim de vida da API SDMX em 2020-06-23 e o
+  endpoint responde 404.
+- Teste de paridade pt/en (`tests/contagem-nos-textos.test.ts`): os dois
+  READMEs citam as mesmas tools e resources e têm o mesmo esqueleto de seções.
+
 ## [1.2.0] — 2026-10-02
 
 Versão **minor**: a superfície muda em dois nós — o `inputSchema` de `search` e
