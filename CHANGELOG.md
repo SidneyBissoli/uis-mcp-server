@@ -6,6 +6,22 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.2.2] — 2026-10-02
+
+Versão **patch**, só de empacotamento: a 1.2.1 levou o README novo ao npm, mas
+a página do pacote passou a exibir o README em **português**
+(`readmeFilename: README.pt-BR.md`). O npm empacota SEMPRE todo `README*` da
+raiz, ignorando o campo `files` (a negação `!README.pt-BR.md` foi testada e não
+funciona), e entre os dois escolheu o traduzido. Superfície inalterada.
+
+### Corrigido
+
+- **O par em português passa a se chamar `LEIA-ME.md`**, fora do padrão
+  `README*`: o tarball leva só o `README.md`. Links do README em inglês e o
+  teste de paridade apontam para o nome novo.
+- Teste novo `tests/pacote-npm-readme.test.ts`: roda `npm pack --dry-run` e
+  exige exatamente um README no pacote, o `README.md` (falha no layout antigo).
+
 ## [1.2.1] — 2026-10-02
 
 Versão **patch**, só de documentação: leva ao npm o README novo (a página do

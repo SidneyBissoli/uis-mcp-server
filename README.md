@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE.md)
 [![Status](https://img.shields.io/website?url=https%3A%2F%2Fuis.sidneybissoli.com%2Fhealth&up_message=online&down_message=offline&label=status)](https://uis.sidneybissoli.com/status)
 
-🇧🇷 [Leia em Português](https://github.com/SidneyBissoli/uis-mcp-server/blob/main/README.pt-BR.md)
+🇧🇷 [Leia em Português](https://github.com/SidneyBissoli/uis-mcp-server/blob/main/LEIA-ME.md)
 
 A **public, hosted, provenance-first** [MCP](https://modelcontextprotocol.io) server for the
 statistics of the **UNESCO Institute for Statistics (UIS)** — education, science and R&D, culture
@@ -32,7 +32,7 @@ numbers guessed from training data.
 > chave) para as estatísticas do **Instituto de Estatística da UNESCO** — matrícula, conclusão,
 > crianças fora da escola, alfabetização, gasto em educação e P&D por país, região e ano, direto
 > no Claude, no ChatGPT ou em qualquer cliente MCP, com proveniência e citação da fonte em cada
-> resposta: [README em português](https://github.com/SidneyBissoli/uis-mcp-server/blob/main/README.pt-BR.md).
+> resposta: [README em português](https://github.com/SidneyBissoli/uis-mcp-server/blob/main/LEIA-ME.md).
 
 ## Questions it answers
 
