@@ -1,0 +1,89 @@
+{
+  "gerado": "2026-10-02T12:47:30.721Z",
+  "pacote": "uis-mcp-server",
+  "endpoint": "https://uis.sidneybissoli.com/mcp",
+  "statusVersion": "1.1.0",
+  "sha256NoAr": "fc0c0b2017692d0cfffd0463e62fb9a790426abd8f12a56415f7890aa73dd6cc",
+  "versoes": [
+    {
+      "versao": "0.4.0",
+      "data": "2026-09-17",
+      "noRegistro": true,
+      "sha256": "f22549e56c915eb171eae3c491d9fec5906e2d32e32701a07419c55720c3a19b",
+      "tools": [
+        "fetch",
+        "search",
+        "uis_get_data",
+        "uis_list_geo_units",
+        "uis_search_indicators"
+      ],
+      "resources": [
+        "uis://guide",
+        "uis://reference/key-indicators",
+        "uis://reference/provenance"
+      ],
+      "prompts": [],
+      "instructionsSha256": "f4a71a1c465b9997e76661558158ec08814f8dff3a47f7f9d1175fabb3669917"
+    },
+    {
+      "versao": "0.7.0",
+      "data": "2026-09-24",
+      "noRegistro": true,
+      "sha256": "b01aa0a281e958914e4c171a9e0a3d28183684107e43d1249c99402dc173f7d8",
+      "tools": [
+        "fetch",
+        "search",
+        "uis_get_data",
+        "uis_list_geo_units",
+        "uis_search_indicators"
+      ],
+      "resources": [
+        "uis://guide",
+        "uis://reference/key-indicators",
+        "uis://reference/provenance"
+      ],
+      "prompts": [],
+      "instructionsSha256": "f4a71a1c465b9997e76661558158ec08814f8dff3a47f7f9d1175fabb3669917"
+    },
+    {
+      "versao": "1.0.0",
+      "data": "2026-09-25",
+      "noRegistro": true,
+      "sha256": "b01aa0a281e958914e4c171a9e0a3d28183684107e43d1249c99402dc173f7d8",
+      "tools": [
+        "fetch",
+        "search",
+        "uis_get_data",
+        "uis_list_geo_units",
+        "uis_search_indicators"
+      ],
+      "resources": [
+        "uis://guide",
+        "uis://reference/key-indicators",
+        "uis://reference/provenance"
+      ],
+      "prompts": [],
+      "instructionsSha256": "f4a71a1c465b9997e76661558158ec08814f8dff3a47f7f9d1175fabb3669917"
+    },
+    {
+      "versao": "1.1.0",
+      "data": "2026-09-27",
+      "noRegistro": true,
+      "sha256": "fc0c0b2017692d0cfffd0463e62fb9a790426abd8f12a56415f7890aa73dd6cc",
+      "tools": [
+        "fetch",
+        "search",
+        "uis_get_data",
+        "uis_list_geo_units",
+        "uis_search_indicators"
+      ],
+      "resources": [
+        "uis://guide",
+        "uis://reference/key-indicators",
+        "uis://reference/provenance"
+      ],
+      "prompts": [],
+      "instructionsSha256": "f4a71a1c465b9997e76661558158ec08814f8dff3a47f7f9d1175fabb3669917"
+    }
+  ]
+}
