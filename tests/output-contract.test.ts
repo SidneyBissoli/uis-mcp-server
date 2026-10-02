@@ -346,15 +346,16 @@ describe("structuredContent obedece ao outputSchema anunciado", () => {
    * nenhum aviso. Resposta errada é pior que erro — erro o modelo corrige na
    * chamada seguinte, resposta errada vira número em relatório.
    *
-   * `search`/`fetch` ficam de fora: o contrato é da OpenAI e quem os registra é
-   * `@sbissoli/mcp-search`.
+   * Vale para TODA tool anunciada, `search`/`fetch` inclusive: o contrato é
+   * da OpenAI e quem os registra é `@sbissoli/mcp-search`, que desde a 0.9.0
+   * publica os dois esquemas estritos. Antes disso esta varredura só olhava as
+   * `uis_*`, e a chave desconhecida em `search` sumia em silêncio.
    */
-  it("toda tool uis_* recusa parâmetro que não existe", async () => {
+  it("toda tool anunciada recusa parâmetro que não existe", async () => {
     const { tools } = await clienteBase.listTools();
-    const proprias = tools.filter((t) => t.name.startsWith("uis_"));
 
-    expect(proprias.length).toBeGreaterThanOrEqual(3);
-    for (const t of proprias) {
+    expect(tools.length).toBeGreaterThanOrEqual(5);
+    for (const t of tools) {
       const schema = t.inputSchema as { additionalProperties?: unknown };
       expect(schema.additionalProperties, `${t.name} aceita chave desconhecida`).toBe(false);
     }
@@ -371,6 +372,19 @@ describe("structuredContent obedece ao outputSchema anunciado", () => {
       ? r.content.map((c) => ("text" in c ? c.text : "")).join(" ")
       : "";
     expect(texto).toContain("limite");
+  });
+
+  it("`search` também recusa chave desconhecida e a NOMEIA", async () => {
+    const r = await clienteBase.callTool({
+      name: "search",
+      arguments: { query: "literacy", year: 2020 },
+    });
+
+    expect(r.isError).toBe(true);
+    const texto = Array.isArray(r.content)
+      ? r.content.map((c) => ("text" in c ? c.text : "")).join(" ")
+      : "";
+    expect(texto).toContain("year");
   });
 
   /**

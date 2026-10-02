@@ -6,10 +6,15 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
-## [Não publicado]
+## [1.2.0] — 2026-10-02
 
-Telemetria do canal hospedado e uma trava de CI: nenhuma tool, parâmetro, campo
-ou mensagem muda — agora afirmado por teste (`surface.lock.json`).
+Versão **minor**: a superfície muda em dois nós — o `inputSchema` de `search` e
+de `fetch` passa a declarar `additionalProperties: false`. A diferença está
+travada em `surface.lock.json`, registrada em `baselines/surface-stdio-1.2.0.json`
+(contra `surface-stdio-1.1.0.json`: 2 diferenças, essas duas) e espelhada em
+`lhm.plugin.json`. Nenhuma outra tool, parâmetro, campo ou mensagem muda.
+Entram também a telemetria do canal hospedado e a trava de CI da superfície,
+acumuladas desde a 1.1.0 (última publicada no npm).
 
 ### Adicionado
 
@@ -26,6 +31,15 @@ ou mensagem muda — agora afirmado por teste (`surface.lock.json`).
 
 ### Corrigido
 
+- **`search`/`fetch` descartavam em silêncio a chave que não existe.** O
+  conserto de 11/09/2026 (parâmetro desconhecido é RECUSADO, nunca tirado)
+  cobriu as três `uis_*`, mas os dois esquemas do contrato Deep Research vêm
+  de `@sbissoli/mcp-search`, que os montava com `z.object`: `search` com
+  `{query, year: 2020}` respondia a busca sem o ano, sem aviso. Com
+  `@sbissoli/mcp-search` 0.9.0 os dois são `z.strictObject`, publicam
+  `additionalProperties: false` e a recusa nomeia a chave. A varredura de
+  `tests/output-contract.test.ts` deixa de olhar só as `uis_*` e passa a
+  cobrir toda tool anunciada, com um caso de `search` recusando `year`.
 - **Toda falha da origem era gravada como erro de classe `contrato`.** Medido
   em 30/09/2026 rodando o classificador sobre o texto que `toToolError` monta:
   timeout, rede, abort, 429, 5xx, 4xx, 404 e corpo que não é JSON saíam
