@@ -15,16 +15,15 @@
  * contagem vem do `tools/list` real, nunca de um literal
  * ([[verificacao-deriva-da-fonte]]).
  *
- * NÃO há teste de paridade pt/en como nos servidores irmãos, e é de propósito:
- * o README deste repositório já é em português, e o servidor está sob
- * pré-requisito de divulgação (`dir_prereq`) — o desenvolvimento vem antes da
- * superfície de divulgação, que foi a ordem seguida no ilo.
+ * Desde 2026-10-02 o README é em inglês com par em português, no molde do
+ * `ilo-mcp-server` — e a paridade entra junto, porque o traduzido é a cópia
+ * que ninguém reabre.
  */
 
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { Client } from "@modelcontextprotocol/client";
 import { InMemoryTransport } from "@modelcontextprotocol/server";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -35,10 +34,12 @@ const raiz = join(dirname(fileURLToPath(import.meta.url)), "..");
 const leia = (f: string) => readFileSync(join(raiz, f), "utf8");
 
 /** Textos vivos, voltados ao público, que podem afirmar um total. */
-const TEXTOS = ["README.md", "server.json", "package.json", "src/config.ts"];
+const TEXTOS = ["README.md", "README.pt-BR.md", "server.json", "package.json", "src/config.ts"];
 
 /** "3 tools", "3 ferramentas". */
 const AFIRMACAO = /(\d+)\s+(?:tools|ferramentas)\b/gi;
+/** Nomes de ferramenta e de resource citados em crase — o par pt/en tem de bater. */
+const CITADAS = /`((?:uis_[a-z_0-9]+)|(?:uis:\/\/[a-z/-]+))`/g;
 
 let real = 0;
 let client: Client;
@@ -71,4 +72,25 @@ describe("contagem de ferramentas nos textos públicos", () => {
       }
     });
   }
+});
+
+describe("paridade entre o README em inglês e o em português", () => {
+  const pt = "README.pt-BR.md";
+
+  it("o README em português existe", () => {
+    expect(existsSync(join(raiz, pt)), `${pt} ausente — metade da superfície em pt`).toBe(true);
+  });
+
+  it("cita exatamente as mesmas ferramentas e resources que o README em inglês", () => {
+    const nomes = (f: string) => new Set([...leia(f).matchAll(CITADAS)].map((m) => m[1]));
+    const en = nomes("README.md");
+    const ptBR = nomes(pt);
+    expect([...en].filter((n) => !ptBR.has(n)).sort(), "no inglês e ausentes do português").toEqual([]);
+    expect([...ptBR].filter((n) => !en.has(n)).sort(), "no português e ausentes do inglês").toEqual([]);
+  });
+
+  it("tem o mesmo esqueleto de seções", () => {
+    const secoes = (f: string) => (leia(f).match(/^#{2,3} /gm) ?? []).length;
+    expect(secoes(pt), "número de seções divergente entre os dois READMEs").toBe(secoes("README.md"));
+  });
 });
