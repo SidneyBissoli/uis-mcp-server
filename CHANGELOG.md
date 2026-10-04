@@ -6,6 +6,31 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [Unreleased]
+
+### Testes
+
+- **O contrato de saída tem forma de cliente** (ideia de leitor,
+  https://dev.to/arhancanli/comment/3g4i4), e com isso cai uma armadilha que
+  `tests/output-contract.test.ts` tinha: cada caso abria um `Client` novo e
+  chamava `callTool` sem `listTools` antes, e o `Client` só valida contra o
+  schema que tem em cache do `tools/list` — **a validação do cliente estava
+  desligada**. Quem validava era um `CfWorkerJsonSchemaValidator` nosso, sobre
+  um `structuredContent` serializado à mão. Agora o servidor de verdade
+  (`buildServer`) é interrogado pelo `Client` do SDK pelo
+  `@sbissoli/mcp-surface/cliente` 0.2.0, comum aos sete servidores: `tools/list`
+  antes do `tools/call`, toda mensagem passada por JSON como na rede, e o
+  resultado reprovado contra o schema **listado**, como a sessão do usuário
+  reprovaria.
+- Entram controles negativos em `uis_search_indicators` (resultado quebrado no
+  fio tem de reprovar, com a armadilha do `tools/list` fixada como veredito), e
+  o campo a mais é provado onde o schema fecha o objeto (cada item de
+  `indicators`; o nível de cima é aberto). Eles substituem o teste do "schema
+  desonesto", que usava o validador nosso.
+
+Sem mudança de superfície nem de versão: só testes e dependência de
+desenvolvimento.
+
 ## [1.2.2] — 2026-10-02
 
 Versão **patch**, só de empacotamento: a 1.2.1 levou o README novo ao npm, mas

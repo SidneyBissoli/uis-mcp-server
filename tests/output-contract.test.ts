@@ -14,20 +14,29 @@
  * registro (`magnitude`, `qualifier`, `footnotes`). Cada tool tem um caso CHEIO
  * e um caso MAGRO.
  *
- * O teste roda o servidor de verdade (`buildServer`) pelo transporte em
- * memória e valida contra o schema que o `tools/list` publica, com o mesmo
- * validador do SDK. A rede nunca é tocada.
+ * Desde 04/10/2026 o teste tem FORMA DE CLIENTE (ideia de leitor,
+ * https://dev.to/arhancanli/comment/3g4i4): o servidor de verdade
+ * (`buildServer`) é interrogado pelo `Client` do SDK, que faz `tools/list` e
+ * `tools/call` e reprova o resultado contra o schema LISTADO — o teste falha
+ * como a sessão do usuário falharia, sem validador escolhido por nós.
+ *
+ * A armadilha que isto fecha, e que este arquivo tinha: o `Client` só valida
+ * contra o schema que tem em cache do `tools/list`. Cada caso abria um cliente
+ * novo e chamava `callTool` direto, sem `listTools` — a validação do cliente
+ * estava DESLIGADA, e quem validava era um `CfWorkerJsonSchemaValidator` nosso,
+ * sobre um `structuredContent` serializado à mão. O circuito agora é o
+ * `@sbissoli/mcp-surface/cliente`, comum aos sete servidores: `tools/list`
+ * uma vez por conexão antes do `tools/call`, e toda mensagem do servidor
+ * passa por JSON antes de chegar ao cliente, como passaria pela rede. A rede
+ * de verdade nunca é tocada.
  */
 
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { Client } from "@modelcontextprotocol/client";
-import { InMemoryTransport } from "@modelcontextprotocol/server";
-import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/server/validators/cf-worker";
+import type { Client } from "@modelcontextprotocol/client";
+import { chamarComoCliente, conectarComoCliente, controlesNegativos } from "@sbissoli/mcp-surface/cliente";
 import { buildServer } from "../src/server.js";
 import { resetIndex } from "../src/tools/deep-research.js";
 import type { Env } from "../src/types.js";
-
-const validador = new CfWorkerJsonSchemaValidator();
 
 // ---------------------------------------------------------------------------
 // Fontes falsas
@@ -252,12 +261,9 @@ const CASOS: Caso[] = [
 let schemas: Map<string, unknown>;
 let clienteBase: Client;
 
-async function conectar(env: Env): Promise<Client> {
-  const server = buildServer(env);
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-  const client = new Client({ name: "output-contract", version: "0.0.0" });
-  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
-  return client;
+/** Conexão no percurso do cliente (JSON no fio), sobre o servidor de verdade. */
+function conectar(env: Env): Promise<Client> {
+  return conectarComoCliente(buildServer(env));
 }
 
 beforeAll(async () => {
@@ -284,47 +290,47 @@ describe("structuredContent obedece ao outputSchema anunciado", () => {
     stubUisFetch(caso.dados);
     const client = await conectar(caso.env);
     try {
-      const resultado = await client.callTool({ name: nome, arguments: caso.args });
-      const texto = (resultado.content as Array<{ text?: string }> | undefined)?.[0]?.text;
-      expect(resultado.isError, `${nome} devolveu erro: ${texto}`).toBeFalsy();
+      // Percurso do cliente: tools/list → tools/call, e o `Client` reprova o
+      // resultado contra o schema listado. O que ele vê é o que atravessou como
+      // JSON: `JSON.stringify` apaga chave cujo valor é `undefined` — num campo
+      // obrigatório isso é "missing required property" do outro lado. O helper
+      // serializa cada mensagem, porque o transporte em memória não serializa.
+      // Lança se o cliente reprovar ou se a tool responder isError.
+      const resultado = await chamarComoCliente(client, nome, caso.args);
       expect(resultado.structuredContent, `${nome} sem structuredContent`).toBeDefined();
-
-      // Valida o que o CLIENTE vê: o `structuredContent` atravessa como JSON, e
-      // `JSON.stringify` apaga chave cujo valor é `undefined` — num campo
-      // obrigatório isso é "missing required property" do outro lado. O
-      // transporte em memória não serializa, então serializa-se aqui.
-      const noFio = JSON.parse(JSON.stringify(resultado.structuredContent)) as unknown;
-      const veredicto = validador.getValidator(schema as never)(noFio);
-      expect(veredicto.valid, `${nome}: ${veredicto.errorMessage}`).toBe(true);
     } finally {
       await client.close();
     }
   });
 
   /**
-   * Um teste que não pode falhar não vale nada: uma saída REAL contra um schema
-   * deliberadamente desonesto — a mentira exata que este arquivo existe para
-   * pegar (campo anulável anunciado como string).
+   * Um teste que não pode falhar não vale nada. Controle negativo pelo lado do
+   * RESULTADO, no percurso do cliente: o servidor responde certo e o resultado
+   * é quebrado NO FIO, entre servidor e cliente — como chegaria de um servidor
+   * com defeito. Cada quebra tem de fazer a chamada FALHAR. As quebras saem do
+   * schema listado (structuredContent ausente, cada obrigatório ausente, tipo
+   * trocado); o último veredito é a armadilha: sem `tools/list` antes, o
+   * `Client` não valida — se o SDK mudar isso, o veredito acusa.
+   *
+   * A do campo a mais só vale onde o schema FECHA o objeto. Medido em
+   * 04/10/2026: o nível de cima de `uis_search_indicators` é aberto
+   * (`looseObject` — cabe proveniência e o que vier), e ali um campo a mais
+   * passa; cada item de `indicators` é `z.object`, publicado com
+   * `additionalProperties: false`, e o recusa.
    */
-  it("reprova um schema desonesto (prova de que o portão pode falhar)", async () => {
-    stubUisFetch({ records: [] });
-    const client = await conectar(CATALOGO([INDICADOR_MAGRO], 1));
-    try {
-      const resultado = await client.callTool({ name: "uis_search_indicators", arguments: { query: "indicator" } });
-      const honesto = schemas.get("uis_search_indicators") as Record<string, unknown>;
-      expect(validador.getValidator(honesto as never)(resultado.structuredContent).valid).toBe(true);
-
-      const desonesto = JSON.parse(JSON.stringify(honesto)) as {
-        properties: { indicators: { items: { properties: Record<string, unknown> } } };
-      };
-      desonesto.properties.indicators.items.properties.last_data_update = { type: "string" };
-
-      const veredicto = validador.getValidator(desonesto as never)(resultado.structuredContent);
-      expect(veredicto.valid).toBe(false);
-      expect(veredicto.errorMessage).toContain("last_data_update");
-    } finally {
-      await client.close();
-    }
+  it("o validador do cliente reprova resultado quebrado no fio (uis_search_indicators)", async () => {
+    const env = CATALOGO([INDICADOR_CHEIO], 1);
+    const vs = await controlesNegativos(() => buildServer(env), "uis_search_indicators", { query: "completion rate" }, [
+      {
+        descricao: "campo que o schema proíbe, onde ele fecha o objeto (indicators[0])",
+        adulterar: (r) => {
+          const itens = r.structuredContent?.indicators as Array<Record<string, unknown>> | undefined;
+          if (itens?.[0]) itens[0].intruso = 1;
+        },
+      },
+    ]);
+    expect(vs.length).toBeGreaterThanOrEqual(4);
+    for (const v of vs) expect(v.obtido, `${v.descricao}: ${v.mensagem ?? ""}`).toBe(v.esperado);
   });
 
   it("toda tool anunciada declara outputSchema e tem ao menos um caso", async () => {
@@ -403,8 +409,7 @@ describe("structuredContent obedece ao outputSchema anunciado", () => {
       expect((desconhecido.content as Array<{ text: string }>)[0]?.text).toContain("ind:NAO.EXISTE");
       expect(fetchSpy).not.toHaveBeenCalled();
 
-      const conhecido = await client.callTool({ name: "fetch", arguments: { id: "ind:CR.1" } });
-      expect(conhecido.isError).toBeFalsy();
+      const conhecido = await chamarComoCliente(client, "fetch", { id: "ind:CR.1" });
       const sc = conhecido.structuredContent as {
         id: string;
         url: string;
