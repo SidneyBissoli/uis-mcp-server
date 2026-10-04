@@ -8,6 +8,18 @@ Registry; a superfície de cada versão está em `baselines/`.
 
 ## [Unreleased]
 
+### Adicionado
+
+- **`/.well-known/mcp/server-card.json`** — antes 404. O card que scanners de
+  diretório (Smithery) leem quando a varredura do `/mcp` não completa, montado
+  pelo gerador comum `@sbissoli/mcp-surface/card` 0.3.0 a partir do
+  `initialize` e das listas reais do mesmo `buildServer` do `/mcp` (forma da
+  Smithery: `serverInfo` com a versão), com `authentication.required` lido da
+  seção `semToken` do `surface.lock.json`. Público, antes da auth e do rate
+  limit. `prompts` fica fora do card: o servidor não serve `prompts/list`.
+  `tests/server-card.test.ts` prova que o card normalizado tem o mesmo sha256
+  da seção `declarada` da trava.
+
 ### Testes
 
 - **O contrato de saída tem forma de cliente** (ideia de leitor,

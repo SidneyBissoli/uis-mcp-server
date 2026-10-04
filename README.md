@@ -344,6 +344,7 @@ answers validated manually against production (`evals/e2e/validacao-respostas.md
 | `/health` | liveness |
 | `/status` | version, tool count and names, current deploy (feeds the README badges) |
 | `/metrics` | aggregated usage (MCP endpoint only; no IPs, no query content) |
+| `/.well-known/mcp/server-card.json` | MCP server card for directory scanners (derived from the live `initialize` + lists — public) |
 | `/mcp` | MCP Streamable HTTP |
 
 ## Security
