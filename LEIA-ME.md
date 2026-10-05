@@ -338,6 +338,7 @@ Rodada de 07/08/2026: **top-1 100% (20/20)** — `evals/results/`.
 | `/health` | liveness |
 | `/status` | versão, contagem e nomes das ferramentas, deploy corrente (alimenta os badges do README) |
 | `/metrics` | uso agregado (só do endpoint MCP; sem IPs, sem conteúdo de consulta) |
+| `/.well-known/mcp/server-card.json` | server card MCP para scanners de diretório (derivado do `initialize` e das listas reais — público) |
 | `/mcp` | MCP Streamable HTTP |
 
 ## Segurança

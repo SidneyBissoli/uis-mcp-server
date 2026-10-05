@@ -1,12 +1,15 @@
 /**
  * Entrypoint do Worker — template de hosting da Fase 0.
  *
- * Fluxo por request: rotas públicas (landing, /health, /status, /metrics) →
+ * Fluxo por request: rotas públicas (landing, /health, /status, /metrics,
+ * server card) →
  * Bearer auth opcional → rate limit por cliente → createMcpHandler (stateless,
  * factory cria um McpServer novo por request — MCP SDK v2 + agents 0.20+).
  */
 
+import { autenticacaoDaTrava, capturarCard, cardEmCache } from "@sbissoli/mcp-surface/card";
 import { createMcpHandler } from "agents/mcp/server";
+import trava from "../surface.lock.json" with { type: "json" };
 import { checkAuth } from "./auth.js";
 import { SERVER_CONFIG } from "./config.js";
 import { ICON_PNG_BASE64 } from "./icon.js";
@@ -27,6 +30,18 @@ export { UsageTracker };
 
 // Decodificado uma vez por isolate, nao por request.
 const ICON_PNG = Uint8Array.from(atob(ICON_PNG_BASE64), (c) => c.charCodeAt(0));
+
+// Server card (/.well-known/mcp/server-card.json) para scanners de diretório
+// que o leem em vez de conectar ao /mcp. Derivado do `initialize` e das listas
+// REAIS do mesmo `buildServer` do /mcp (@sbissoli/mcp-surface/card), com
+// `authentication` lido da seção `semToken` da trava — o que a borda mediu.
+// Montado uma vez por isolate; falha não fica em cache.
+let serverCard: (() => Promise<string>) | undefined;
+function cardDoServidor(env: Env): () => Promise<string> {
+  return (serverCard ??= cardEmCache(() =>
+    capturarCard(buildServer(env), { authentication: autenticacaoDaTrava(trava) }),
+  ));
+}
 
 function json(data: unknown, extraHeaders: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(data), {
@@ -83,6 +98,22 @@ export default {
     if (url.pathname === "/metrics") {
       const snap = await usageSnapshot(env);
       return json(snap ?? { aviso: "binding USAGE ausente — estatísticas de uso desativadas" });
+    }
+
+    // Server card — público como o /status: descoberta não carrega credencial.
+    if (url.pathname === "/.well-known/mcp/server-card.json") {
+      try {
+        return new Response(await cardDoServidor(env)(), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (err) {
+        logger.error("server_card_failed", { err: String(err) });
+        return new Response(JSON.stringify({ error: "server card unavailable" }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Desafio de posse do claim no mcpindex.ai: serve o token temporário do
