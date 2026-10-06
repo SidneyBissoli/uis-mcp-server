@@ -1,30 +1,30 @@
 {
-  "identifier": "sidneybissoli-uis-mcp-server",
-  "name": "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
-  "version": "1.3.0",
-  "icon": "🎓",
-  "description": "Remote MCP server for the UNESCO Institute for Statistics (UIS): indicators on education, science/R&D, culture and communication by country, region and year — hosted, nothing to install, no API key, with source URL, data release, retrieval timestamp and licence on every answer. Everyday and US wording (enrollment, spending, preschool) is resolved to the UIS's own. Also runs locally over stdio (npm).",
-  "author": "Sidney da S. P. Bissoli",
-  "authorUrl": "https://github.com/SidneyBissoli",
-  "homepage": "https://github.com/SidneyBissoli/uis-mcp-server",
-  "cloudEndpoint": "https://uis.sidneybissoli.com/mcp",
-  "category": "science-education",
-  "tags": [
-    "unesco",
-    "uis",
-    "education",
-    "education-statistics",
-    "literacy",
-    "enrolment",
-    "sdg4",
-    "science-statistics",
-    "research-and-development",
-    "culture-statistics",
-    "official-statistics",
-    "open-data",
-    "provenance",
-    "cloudflare-workers"
+  "prompts": [],
+  "resources": [
+    {
+      "description": "How to query the UNESCO UIS with this server: tool workflow, code conventions (indicator code families and suffixes, ISO alpha-3 geo units, themes), limits and reporting rules. Read once per session to save discovery calls.",
+      "mimeType": "text/markdown",
+      "name": "uis-guide",
+      "title": "UIS query guide",
+      "uri": "uis://guide"
+    },
+    {
+      "description": "Verified indicator codes for the most common questions — completion, out-of-school, enrolment, literacy, learning proficiency, education spending, R&D (SDG 9.5), heritage spending (SDG 11.4) and population — usable directly in uis_get_data.",
+      "mimeType": "text/markdown",
+      "name": "uis-key-indicators",
+      "title": "Key UIS indicators by topic",
+      "uri": "uis://reference/key-indicators"
+    },
+    {
+      "description": "Meaning of every provenance field returned with the data (source_url, data_vintage, retrieved_at, retrieval, license, citation, derived) and how to cite the UIS correctly, including what CC BY-SA ShareAlike requires downstream.",
+      "mimeType": "text/markdown",
+      "name": "uis-provenance",
+      "title": "Provenance and citation contract",
+      "uri": "uis://reference/provenance"
+    }
   ],
+  "serverName": "uis-mcp-server",
+  "toolCount": 5,
   "tools": [
     {
       "annotations": {
@@ -2875,29 +2875,5 @@
       },
       "title": "Search UNESCO UIS indicators"
     }
-  ],
-  "resources": [
-    {
-      "description": "How to query the UNESCO UIS with this server: tool workflow, code conventions (indicator code families and suffixes, ISO alpha-3 geo units, themes), limits and reporting rules. Read once per session to save discovery calls.",
-      "mimeType": "text/markdown",
-      "name": "uis-guide",
-      "title": "UIS query guide",
-      "uri": "uis://guide"
-    },
-    {
-      "description": "Verified indicator codes for the most common questions — completion, out-of-school, enrolment, literacy, learning proficiency, education spending, R&D (SDG 9.5), heritage spending (SDG 11.4) and population — usable directly in uis_get_data.",
-      "mimeType": "text/markdown",
-      "name": "uis-key-indicators",
-      "title": "Key UIS indicators by topic",
-      "uri": "uis://reference/key-indicators"
-    },
-    {
-      "description": "Meaning of every provenance field returned with the data (source_url, data_vintage, retrieved_at, retrieval, license, citation, derived) and how to cite the UIS correctly, including what CC BY-SA ShareAlike requires downstream.",
-      "mimeType": "text/markdown",
-      "name": "uis-provenance",
-      "title": "Provenance and citation contract",
-      "uri": "uis://reference/provenance"
-    }
-  ],
-  "prompts": []
+  ]
 }
