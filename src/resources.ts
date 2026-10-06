@@ -23,11 +23,10 @@
  */
 
 import type { McpServer } from "@modelcontextprotocol/server";
-import { CONTRACT_VERSION } from "@sbissoli/mcp-provenance";
 
 import { UIS_LIMITS } from "./config.js";
 import { UIS_THEMES } from "./uis/catalog.js";
-import { UIS_LICENSE } from "./uis/provenance.js";
+import { provenance, UIS_LICENSE } from "./uis/provenance.js";
 
 export const GUIDE_URI = "uis://guide";
 export const KEY_INDICATORS_URI = "uis://reference/key-indicators";
@@ -211,7 +210,7 @@ distinction carries the answer.
 export function provenanceMarkdown(): string {
   return `# Provenance and citation
 
-Every tool response carries a provenance block (contract v${CONTRACT_VERSION}). The fields:
+Every tool response carries a provenance block (contract v${provenance.contractVersion}). The fields:
 
 - **\`source_url\`** — the complete UIS Data API URL that produced the numbers,
   including the pinned release. Paste it and you get the same response.

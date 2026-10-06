@@ -1,8 +1,8 @@
 {
   "$comentario": "Impressão digital da superfície (@sbissoli/mcp-surface). Não editar à mão: `npm run surface:lock` regrava, e só aceita superfície nova sob versão nova.",
   "declarada": {
-    "versao": "1.2.0",
-    "sha256": "81eb060cba32be8f493cb3b280ffc8bc2441194a9bd7f5e28657417b6d212494",
+    "versao": "1.3.0",
+    "sha256": "5478ce4b75001460ee0103e29ce6c0f48fbf6bb2212250e22207fdb145529a93",
     "conteudo": {
       "initialize": {
         "capabilities": {
@@ -116,6 +116,57 @@
                           "null"
                         ]
                       },
+                      "field_sources": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "data_vintage": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "dataset_id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "fields": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1,
+                              "type": "array"
+                            },
+                            "retrieved_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "served_from_cache": {
+                              "type": [
+                                "boolean",
+                                "null"
+                              ]
+                            },
+                            "source_url": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "fields",
+                            "source_url",
+                            "dataset_id",
+                            "data_vintage",
+                            "retrieved_at"
+                          ],
+                          "type": "object"
+                        },
+                        "minItems": 1,
+                        "type": "array"
+                      },
                       "license": {
                         "type": [
                           "string",
@@ -217,7 +268,10 @@
                         "type": "string"
                       },
                       "contract_version": {
-                        "const": "1.1",
+                        "enum": [
+                          "1.1",
+                          "1.2"
+                        ],
                         "type": "string"
                       },
                       "data_vintage": {
@@ -308,6 +362,12 @@
                                 "retrieved_at": {
                                   "type": [
                                     "string",
+                                    "null"
+                                  ]
+                                },
+                                "served_from_cache": {
+                                  "type": [
+                                    "boolean",
                                     "null"
                                   ]
                                 },
@@ -582,6 +642,57 @@
                           "null"
                         ]
                       },
+                      "field_sources": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "data_vintage": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "dataset_id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "fields": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1,
+                              "type": "array"
+                            },
+                            "retrieved_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "served_from_cache": {
+                              "type": [
+                                "boolean",
+                                "null"
+                              ]
+                            },
+                            "source_url": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "fields",
+                            "source_url",
+                            "dataset_id",
+                            "data_vintage",
+                            "retrieved_at"
+                          ],
+                          "type": "object"
+                        },
+                        "minItems": 1,
+                        "type": "array"
+                      },
                       "license": {
                         "type": [
                           "string",
@@ -683,7 +794,10 @@
                         "type": "string"
                       },
                       "contract_version": {
-                        "const": "1.1",
+                        "enum": [
+                          "1.1",
+                          "1.2"
+                        ],
                         "type": "string"
                       },
                       "data_vintage": {
@@ -774,6 +888,12 @@
                                 "retrieved_at": {
                                   "type": [
                                     "string",
+                                    "null"
+                                  ]
+                                },
+                                "served_from_cache": {
+                                  "type": [
+                                    "boolean",
                                     "null"
                                   ]
                                 },
@@ -1106,6 +1226,57 @@
                           "null"
                         ]
                       },
+                      "field_sources": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "data_vintage": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "dataset_id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "fields": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1,
+                              "type": "array"
+                            },
+                            "retrieved_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "served_from_cache": {
+                              "type": [
+                                "boolean",
+                                "null"
+                              ]
+                            },
+                            "source_url": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "fields",
+                            "source_url",
+                            "dataset_id",
+                            "data_vintage",
+                            "retrieved_at"
+                          ],
+                          "type": "object"
+                        },
+                        "minItems": 1,
+                        "type": "array"
+                      },
                       "license": {
                         "type": [
                           "string",
@@ -1207,7 +1378,10 @@
                         "type": "string"
                       },
                       "contract_version": {
-                        "const": "1.1",
+                        "enum": [
+                          "1.1",
+                          "1.2"
+                        ],
                         "type": "string"
                       },
                       "data_vintage": {
@@ -1298,6 +1472,12 @@
                                 "retrieved_at": {
                                   "type": [
                                     "string",
+                                    "null"
+                                  ]
+                                },
+                                "served_from_cache": {
+                                  "type": [
+                                    "boolean",
                                     "null"
                                   ]
                                 },
@@ -1630,6 +1810,57 @@
                           "null"
                         ]
                       },
+                      "field_sources": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "data_vintage": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "dataset_id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "fields": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1,
+                              "type": "array"
+                            },
+                            "retrieved_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "served_from_cache": {
+                              "type": [
+                                "boolean",
+                                "null"
+                              ]
+                            },
+                            "source_url": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "fields",
+                            "source_url",
+                            "dataset_id",
+                            "data_vintage",
+                            "retrieved_at"
+                          ],
+                          "type": "object"
+                        },
+                        "minItems": 1,
+                        "type": "array"
+                      },
                       "license": {
                         "type": [
                           "string",
@@ -1731,7 +1962,10 @@
                         "type": "string"
                       },
                       "contract_version": {
-                        "const": "1.1",
+                        "enum": [
+                          "1.1",
+                          "1.2"
+                        ],
                         "type": "string"
                       },
                       "data_vintage": {
@@ -1822,6 +2056,12 @@
                                 "retrieved_at": {
                                   "type": [
                                     "string",
+                                    "null"
+                                  ]
+                                },
+                                "served_from_cache": {
+                                  "type": [
+                                    "boolean",
                                     "null"
                                   ]
                                 },
@@ -2185,6 +2425,57 @@
                           "null"
                         ]
                       },
+                      "field_sources": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "data_vintage": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "dataset_id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "fields": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1,
+                              "type": "array"
+                            },
+                            "retrieved_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "served_from_cache": {
+                              "type": [
+                                "boolean",
+                                "null"
+                              ]
+                            },
+                            "source_url": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "fields",
+                            "source_url",
+                            "dataset_id",
+                            "data_vintage",
+                            "retrieved_at"
+                          ],
+                          "type": "object"
+                        },
+                        "minItems": 1,
+                        "type": "array"
+                      },
                       "license": {
                         "type": [
                           "string",
@@ -2286,7 +2577,10 @@
                         "type": "string"
                       },
                       "contract_version": {
-                        "const": "1.1",
+                        "enum": [
+                          "1.1",
+                          "1.2"
+                        ],
                         "type": "string"
                       },
                       "data_vintage": {
@@ -2377,6 +2671,12 @@
                                 "retrieved_at": {
                                   "type": [
                                     "string",
+                                    "null"
+                                  ]
+                                },
+                                "served_from_cache": {
+                                  "type": [
+                                    "boolean",
                                     "null"
                                   ]
                                 },

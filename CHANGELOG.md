@@ -6,7 +6,32 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
-## [Unreleased]
+## [1.3.0] — 2026-10-05
+
+Versão **minor**: proveniência `@sbissoli/mcp-provenance` 0.3.0 (contrato
+v1.2) no **tempo 1** — o servidor passa a DECLARAR a v1.2 no `outputSchema`,
+mas continua EMITINDO a v1.1. Nenhuma resposta de tool muda, byte a byte;
+ligar a emissão da 1.2 é o tempo 2. A diferença de superfície são 15 nós de
+schema, três em cada uma das cinco tools com `outputSchema`, travada em
+`surface.lock.json`, registrada em `baselines/surface-stdio-1.3.0.json`
+(contra `surface-stdio-1.2.0.json`: só esses nós) e espelhada em
+`lhm.plugin.json`. Entra também o server card, acumulado desde a 1.2.2.
+
+### Alterado
+
+- **Proveniência 0.3.0 (contrato v1.2) no tempo 1.**
+  `@sbissoli/mcp-provenance` ^0.2.0 → ^0.3.0 e `@sbissoli/mcp-upstream`
+  ^0.3.0 → ^0.4.0 (lock só toca os dois pacotes; cópia única da
+  proveniência). O `outputSchema` declara a chave opcional `field_sources` no
+  bloco concise, `served_from_cache` opcional em cada item de `field_sources`,
+  e o `contract_version` do bloco detailed passa de `const: "1.1"` a
+  `enum: ["1.1", "1.2"]`. O contexto de proveniência continua no padrão
+  (`contractVersion` "1.1"), `retrieved_at` é calculado como antes e nenhum
+  `field_sources` passa a ser preenchido: as respostas são as mesmas da 1.2.2.
+- A resource `uis://reference/provenance` cita a versão que o servidor
+  **emite**, lida do contexto (`provenance.contractVersion`), e não mais a
+  constante do pacote. O texto continua "contract v1.1"; o vínculo fica certo
+  para o tempo 2.
 
 ### Adicionado
 
@@ -40,7 +65,7 @@ Registry; a superfície de cada versão está em `baselines/`.
   `indicators`; o nível de cima é aberto). Eles substituem o teste do "schema
   desonesto", que usava o validador nosso.
 
-Sem mudança de superfície nem de versão: só testes e dependência de
+Os itens de testes não mudam a superfície: só testes e dependência de
 desenvolvimento.
 
 ## [1.2.2] — 2026-10-02
