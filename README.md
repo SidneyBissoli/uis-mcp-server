@@ -362,4 +362,4 @@ Privacy policy of the hosted service: [PRIVACY.md](PRIVACY.md).
 
 ## Contact
 
-Sidney da S. P. Bissoli — sbissoli76@gmail.com. This service is not endorsed by UNESCO.
+Sidney da Silva Pereira Bissoli — sbissoli76@gmail.com. This service is not endorsed by UNESCO.
