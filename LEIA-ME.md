@@ -356,4 +356,4 @@ Política de privacidade do serviço hospedado: [PRIVACY.md](PRIVACY.md).
 
 ## Contato
 
-Sidney da S. P. Bissoli — sbissoli76@gmail.com. Este serviço não tem endosso da UNESCO.
+Sidney da Silva Pereira Bissoli — sbissoli76@gmail.com. Este serviço não tem endosso da UNESCO.
