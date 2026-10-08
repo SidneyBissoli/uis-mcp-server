@@ -219,7 +219,13 @@ Every tool response carries a provenance block (contract v${provenance.contractV
   reproducible until the UIS publishes a new one.
 - **\`retrieved_at\`** — when this server fetched from the UIS, in UTC. On a
   cached response it is the timestamp of the ORIGINAL fetch, not of the cache
-  hit: \`served_from_cache\` tells the two apart.
+  hit: \`served_from_cache\` tells the two apart. When one answer joins parts
+  extracted at different moments — \`uis_get_data\`: the current release (cached up
+  to 24 h) plus the data fetched now; \`fetch\`: also the catalogue row, from the
+  catalogue snapshot — \`retrieved_at\` is the OLDEST of them ("nothing here is older
+  than this"), \`served_from_cache\` is \`true\` only when every part came from a cache,
+  and \`field_sources\` lists each part with the fields it produced, its URL, its own
+  \`retrieved_at\` and whether it came from the cache.
 - **\`retrieval\`** — the origin diagnostic of this call, measured by the server:
   \`requests\` (distinct calls made to the UIS Data API), \`attempts\` (including retries),
   \`anomalies\` overcome on the way (\`timeout\`, \`network\`, \`rate_limited\`, \`http_5xx\`,

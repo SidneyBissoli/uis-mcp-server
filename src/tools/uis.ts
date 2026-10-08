@@ -18,6 +18,7 @@ import {
   fetchUisData,
   mensagensDeDica,
   mensagensDeInexistencia,
+  UIS_RELEASE_URL,
   UisUserError,
   type UisRecord,
 } from "../uis/api.js";
@@ -175,7 +176,7 @@ export function uisGetDataHandler(env: Env) {
             "Split the indicators into batches.",
         );
       }
-      const { records, hints, retrievedAt, sourceUrl, release } = await fetchUisData(env, {
+      const { records, hints, retrievedAt, sourceUrl, release, releaseRetrievedAt, releaseServedFromCache } = await fetchUisData(env, {
         indicators: args.indicators,
         geoUnits: args.geo_units,
         start: args.start_year,
@@ -242,14 +243,34 @@ export function uisGetDataHandler(env: Env) {
           ? { year: `${args.start_year ?? ""}-${args.end_year ?? ""}` }
           : {}),
       };
+      const vintage = uisDataVintage(release);
+      // Duas partes, dois endpoints, dois instantes: a release (quase sempre do KV,
+      // até 24 h) dá `data_vintage`/`dataset.version`; os dados vêm agora. O topo é
+      // o mais antigo e o `field_sources` diz qual é qual (contrato §3).
       const p = uisProvenance({
         dataset: { id: args.indicators.join(","), version: release.version, name: null },
         dimensionKey,
-        dataVintage: uisDataVintage(release),
+        dataVintage: vintage,
         retrievedAt,
         sourceUrl,
-        servedFromCache: false,
         notices: noticesFromUisRecords(records),
+        parts: [
+          {
+            fields: ["data_vintage", "dataset.version"],
+            sourceUrl: UIS_RELEASE_URL,
+            dataVintage: vintage,
+            retrievedAt: releaseRetrievedAt,
+            servedFromCache: releaseServedFromCache,
+          },
+          {
+            fields: ["rows", "rows_count"],
+            sourceUrl,
+            datasetId: args.indicators.join(","),
+            dataVintage: vintage,
+            retrievedAt,
+            servedFromCache: false,
+          },
+        ],
       });
       const r = provenance.result(data, p, { mode: args.provenance_mode ?? "concise" });
       return { ...r, structuredContent: { ...r.structuredContent, ...data } };

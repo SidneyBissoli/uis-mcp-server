@@ -50,10 +50,10 @@ import {
 import { classifyError, classifyThrown } from "../call-shape.js";
 import { KEY_INDICATORS } from "../resources.js";
 import type { Env } from "../types.js";
-import { fetchUisData, mensagensDeDica, type UisRecord } from "../uis/api.js";
+import { fetchUisData, mensagensDeDica, UIS_RELEASE_URL, type UisRecord } from "../uis/api.js";
 import { listUisCatalog, UIS_CATALOG_SOURCE_URL, type UisCatalogRow } from "../uis/catalog.js";
 import { provenanceExtras, uisDataVintage, uisProvenance } from "../uis/provenance.js";
-import { withUpstreamCall } from "../uis/upstream.js";
+import { upstreamCall, withUpstreamCall } from "../uis/upstream.js";
 import { askedWordsFor } from "../uis/vocabulary.js";
 import type { RecordUsage } from "../usage-core.js";
 import { noticesFromUisRecords } from "./uis.js";
@@ -310,20 +310,52 @@ export function deepResearchHandlers(env: Env) {
     }
 
     const start = row.year_max - (SAMPLE_YEARS - 1);
-    const { records, hints, retrievedAt, sourceUrl, release } = await fetchUisData(env, {
+    // A linha do catálogo é parte da resposta (título, metadados, anos, contagem — e
+    // o recorte da amostra sai de `year_max`): entra no coletor com o instante do
+    // seed, como acerto de cache do servidor, não como ida à origem.
+    if (!Number.isNaN(Date.parse(idx.retrievedAt))) upstreamCall().recordCache(UIS_CATALOG_SOURCE_URL, idx.retrievedAt);
+    const { records, hints, retrievedAt, sourceUrl, release, releaseRetrievedAt, releaseServedFromCache } = await fetchUisData(env, {
       indicators: [row.code],
       geoUnits: [...SAMPLE_GEO_UNITS],
       start,
       end: row.year_max,
     });
+    const vintage = uisDataVintage(release);
+    // Três partes: a linha do catálogo (seed — semanas ou meses), a release (KV, até
+    // 24 h) e a amostra (agora). O topo é o mais antigo; `field_sources` diz qual é
+    // qual — inclusive a release do seed, que pode não ser a dos dados (contrato §3).
     const p = uisProvenance({
       dataset: { id: row.code, version: release.version, name: row.name },
       dimensionKey: { indicator: row.code, geoUnit: SAMPLE_GEO_UNITS.join(","), year: `${start}-${row.year_max}` },
-      dataVintage: uisDataVintage(release),
+      dataVintage: vintage,
       retrievedAt,
       sourceUrl,
-      servedFromCache: false,
       notices: noticesFromUisRecords(records),
+      parts: [
+        {
+          fields: ["title", "url", "metadata", "text"],
+          sourceUrl: UIS_CATALOG_SOURCE_URL,
+          datasetId: "UIS indicator catalogue",
+          dataVintage: idx.releaseVersion,
+          retrievedAt: idx.retrievedAt,
+          servedFromCache: true,
+        },
+        {
+          fields: ["data_vintage", "dataset.version"],
+          sourceUrl: UIS_RELEASE_URL,
+          dataVintage: vintage,
+          retrievedAt: releaseRetrievedAt,
+          servedFromCache: releaseServedFromCache,
+        },
+        {
+          fields: ["text.sample"],
+          sourceUrl,
+          datasetId: row.code,
+          dataVintage: vintage,
+          retrievedAt,
+          servedFromCache: false,
+        },
+      ],
     });
     return {
       document: { id, title: row.name, text: renderIndicator(row, records, mensagensDeDica(hints)), url, metadata },

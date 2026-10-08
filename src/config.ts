@@ -13,7 +13,7 @@ export const SERVER_CONFIG = {
   /** Nome curto do servidor (handshake MCP, /status, landing). */
   name: "uis-mcp-server",
   /** Versão do servidor — manter em sincronia com package.json. */
-  version: "1.5.0",
+  version: "1.5.1",
   /** Título de exibição (clientes MCP mostram ao usuário). */
   title: "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
   /**
@@ -78,9 +78,10 @@ export const SERVER_CONFIG = {
  * Contexto de proveniência do servidor: namespace reverse-DNS próprio, inglês, UTC.
  *
  * `contractVersion` é a versão do contrato que este servidor EMITE (o padrão da lib é
- * 1.1). 1.2 = tempo 2 do rollout da v1.2 (contrato §8): o `field_sources` sairia no
- * `concise` das respostas que fundem sub-fontes — o uis não funde nenhuma, então o fio
- * só muda no `contract_version` do `detailed`. Quem mostra a versão ao cliente lê
+ * 1.1). 1.2 = tempo 2 do rollout da v1.2 (contrato §8): o `field_sources` sai no
+ * `concise` das respostas que fundem sub-fontes — no uis, `uis_get_data` (release + dados)
+ * e `fetch` com amostra (catálogo + release + dados), desde a 1.5.1; até a 1.5.0 elas
+ * saíam sem ele e com o instante mais NOVO no topo. Quem mostra a versão ao cliente lê
  * `provenance.contractVersion`, nunca um literal. A 1.3 liga numa sessão posterior.
  */
 export const PROVENANCE_OPTIONS: ProvenanceContextOptions = {

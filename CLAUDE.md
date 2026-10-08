@@ -77,7 +77,10 @@ Analytics Engine `ANALYTICS`, `CF_VERSION_METADATA`. Auth: sem `API_KEY` configu
 
 **Proveniência:** toda resposta leva o envelope do contrato (a versão emitida é `contractVersion` em `PROVENANCE_OPTIONS`, `src/config.ts` — 1.2 desde a 1.5.0; quem a mostra ao cliente lê `provenance.contractVersion`); `revision` é sempre `current` (`UIS_REVISION`, `src/uis/provenance.ts`); `retrieved_at` é sempre o
 instante REAL da extração (para o catálogo, o do seed, gravado em `uis_meta`; respostas do
-catálogo são `served_from_cache: true`). `derived` é sempre `false`: o servidor não transforma
+catálogo são `served_from_cache: true`). Resposta que junta partes (`uis_get_data`: release do KV +
+dados; `fetch`: + linha do catálogo) leva `field_sources` (uma entrada por parte, `parts` em
+`uisProvenance`), `retrieved_at` = o MAIS ANTIGO e `served_from_cache` = todas do cache — desde a
+1.5.1; o acerto de KV vai ao coletor por `recordCache` e NÃO conta no `retrieval`. `derived` é sempre `false`: o servidor não transforma
 valores (README, "Behaviour and limits").
 
 ## Testes
@@ -98,6 +101,9 @@ explica no cabeçalho):
   superfície real.
 - `pacote-npm-readme.test.ts` — o pacote leva um README só (o npm empacota todo `README*`).
 - `lhm-manifest.test.ts` — `lhm.plugin.json` é derivado da superfície, nunca mantido à mão.
+- `retrieved-at-mais-antigo.test.ts` — resposta que junta partes (release do KV + dados; +
+  catálogo no `fetch`) informa o instante MAIS ANTIGO, `field_sources` por parte e
+  `served_from_cache` honesto (até a 1.5.0 saía o mais novo).
 
 ## Trava da superfície e impressão digital no registro
 

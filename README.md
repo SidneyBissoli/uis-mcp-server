@@ -269,7 +269,10 @@ indicator, which code":
   publishes a new one (2–3 times a year); its real `retrieved_at` is reported in the provenance
   of `uis_search_indicators`, so its age is always visible (`served_from_cache: true`).
 - **`retrieved_at` is always the real instant of extraction from the UIS**, never the build or
-  response time.
+  response time. When an answer joins parts extracted at different moments (`uis_get_data`: the
+  current release, cached up to 24 h, plus the data fetched now; `fetch`: also the catalogue row),
+  it is the OLDEST of them, and `field_sources` gives each part its own instant and cache flag
+  (since 1.5.1).
 - **Notices** report footnote types, magnitude and qualifier, with counts; the full text of each
   footnote stays on the row (`include_footnotes: true`).
 - **Every upstream call has a timeout and a retry policy** (since 1.1.0, measured against the

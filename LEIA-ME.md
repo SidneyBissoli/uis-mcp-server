@@ -263,6 +263,10 @@ gasta com "qual indicador, qual código":
   publica release nova (2 a 3 vezes por ano); o `retrieved_at` real dele sai na proveniência de
   `uis_search_indicators`, então a idade fica sempre visível (`served_from_cache: true`).
 - **`retrieved_at` é sempre o instante real da extração na UIS**, nunca o do build ou da resposta.
+  Quando a resposta junta partes extraídas em momentos diferentes (`uis_get_data`: a release
+  corrente, em cache por até 24 h, mais os dados buscados agora; `fetch`: também a linha do
+  catálogo), ele é o MAIS ANTIGO entre elas, e `field_sources` dá a cada parte o próprio instante
+  e se veio do cache (desde a 1.5.1).
 - **Notices** reportam os tipos de footnote, magnitude e qualifier, com contagem; o texto integral
   de cada footnote fica na linha (`include_footnotes: true`).
 - **Toda ida à fonte tem timeout e política de retry** (desde a 1.1.0, medida contra a API viva em

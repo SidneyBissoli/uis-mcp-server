@@ -6,6 +6,48 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.5.1] — 2026-10-08
+
+Conserto de contrato de proveniência (§3, `retrieved_at` e `field_sources`). Duas tools
+juntavam partes extraídas em momentos distintos e informavam o instante da parte MAIS NOVA:
+
+- `uis_get_data` junta a release corrente (`/versions/default`, quase sempre do KV, com até
+  24 h — é dela que saem `data_vintage` e `dataset.version`) com os dados buscados agora. O
+  `retrieved_at` era o dos dados, `served_from_cache` saía `false` fixo e o instante da
+  release, devolvido por `getDefaultRelease`, era descartado. Medido em produção em
+  08/10/2026: `retrieval.requests: 1` (release do KV) e `retrieved_at` = agora, sem
+  `field_sources`.
+- `fetch` (Deep Research) com amostra junta ainda a linha do catálogo (seed — semanas ou
+  meses: título, anos, contagem de registros, e o recorte da amostra sai de `year_max`) e
+  fazia o mesmo.
+
+### Corrigido
+
+- Nas duas, o `retrieved_at` do bloco passa a ser o **mais antigo** entre as partes;
+  `served_from_cache` é `true` só se todas vieram do cache; e `field_sources` traz uma
+  entrada por parte (campos que ela produziu, URL, `data_vintage`, instante próprio e se
+  veio do cache). O servidor emite o contrato 1.2, então `field_sources` sai também no
+  `concise`. A citação continua embutindo a data de extração da URL citada (a dos dados).
+- O acerto de KV da release e a linha do catálogo entram no coletor do
+  `@sbissoli/mcp-upstream` por `recordCache` (não contam no `retrieval` — acerto de cache não
+  é ida à origem); `uisProvenance` monta as sub-fontes por `call.fieldSource`, com o instante
+  declarado pela parte como piso fora de um coletor.
+- A resource `uis://reference/provenance`, README e LEIA-ME explicam o caso misto.
+
+Inalterados: `tools/list`, as tools de catálogo e `search` (uma parte só), licença
+CC BY-SA, `derived: false`.
+
+### Testes
+
+- `tests/retrieved-at-mais-antigo.test.ts`: release do KV + dados (topo = release,
+  `field_sources` com os dois instantes, `served_from_cache` honesto, `retrieval` conta só a
+  ida de dados, também no `concise` e fora de um coletor); KV frio (duas idas, nada do
+  cache); `fetch` com seed + KV + amostra (topo = seed, três sub-fontes, a release do seed
+  visível); todas as partes do cache → `served_from_cache: true`. Seis dos oito casos
+  falham no código da 1.5.0.
+- `tests/provenance-contrato.test.ts`: o texto deixa de dizer que o uis não funde
+  sub-fontes; o caso agora prende a regra do bloco de uma parte só.
+
 ## [1.5.0] — 2026-10-08
 
 Contrato de proveniência: tempo 2 do rollout da v1.2 e tempo 1 da v1.3
