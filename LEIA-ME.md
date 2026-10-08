@@ -228,7 +228,7 @@ este runtime (usado pelo registro Glama).
 Fluxo típico: `uis_search_indicators` para achar o código do indicador → `uis_list_geo_units`
 para os códigos de país/região → `uis_get_data` com filtro de anos.
 
-Toda resposta carrega o **bloco de proveniência v1.1**
+Toda resposta carrega o **bloco de proveniência** do portfólio
 ([`@sbissoli/mcp-provenance`](https://www.npmjs.com/package/@sbissoli/mcp-provenance), modos
 `concise`/`detailed` pelo parâmetro `provenance_mode`) em três canais: `structuredContent`,
 `_meta` com namespace (`com.sidneybissoli.uis/*`) e rodapé de texto. Desde a 1.1.0 o bloco traz

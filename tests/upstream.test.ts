@@ -25,6 +25,7 @@ import {
   UisUpstreamError,
   upstreamIo,
 } from "../src/uis/upstream.js";
+import { provenance } from "../src/uis/provenance.js";
 import { buildServer } from "../src/server.js";
 import { resetIndex } from "../src/tools/deep-research.js";
 import type { Env } from "../src/types.js";
@@ -257,7 +258,7 @@ describe("retrieval medido pelo servidor inteiro", () => {
       expect(r.isError).toBeFalsy();
       const sc = r.structuredContent as Record<string, unknown>;
       expect(sc.rows_count).toBe(2);
-      expect((sc.provenance as Record<string, unknown>).contract_version).toBe("1.1");
+      expect((sc.provenance as Record<string, unknown>).contract_version).toBe(provenance.contractVersion);
       expect(retrievalOf(r)).toEqual({
         requests: 2,
         attempts: 3,

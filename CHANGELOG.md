@@ -6,6 +6,38 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.5.0] — 2026-10-08
+
+Contrato de proveniência: tempo 2 do rollout da v1.2 e tempo 1 da v1.3
+(`@sbissoli/mcp-provenance` 0.4.0, contrato §8). **O que o leitor recebe não muda**: este
+servidor nunca funde sub-fontes, então o bloco `concise` e o rodapé de texto saem byte a
+byte iguais; só o `contract_version` do bloco `detailed` passa de 1.1 a 1.2.
+
+### Alterado
+
+- O servidor passa a emitir o contrato **1.2** (`contractVersion` em `PROVENANCE_OPTIONS`).
+  A resource `uis://guide/provenance` lê a versão do contexto de proveniência, não do
+  padrão da lib.
+- `@sbissoli/mcp-provenance` `^0.4.0` e `@sbissoli/mcp-upstream` `^0.4.2`.
+- O `outputSchema` de toda tool declara as quatro chaves opcionais da v1.3 (`notices`,
+  `derived`, `derivation_note`, `revision`), vindas verbatim do pacote — no dia em que o
+  servidor ligar a 1.3, os conectores já guardam um esquema que as aceita.
+- Todo bloco canônico carrega `revision: { status: "current", note }`, com a nota
+  reaproveitando o que o servidor já diz sobre releases da UIS reverem anos passados. Não
+  sai no fio enquanto o servidor emitir menos que 1.3. `derived` segue `false` (tratamento
+  do CC BY-SA inalterado).
+- Textos escritos à mão deixam de fixar uma versão do contrato ("contract v1.1"): a
+  descrição do `outputSchema` de proveniência, README/LEIA-ME e comentários do código.
+- Superfície declarada nova: trava, `server.json` e `lhm.plugin.json` regravados.
+
+### Testes
+
+- `tests/provenance-contrato.test.ts`: a versão emitida é a escolhida pelo servidor (e a
+  resource a mostra); ligar a 1.2 deixa `concise` e rodapé byte a byte iguais aos da 1.1;
+  o bloco canônico carrega a `revision` decidida; uma prévia do que a 1.3 vai mostrar
+  (avisos de qualifier/magnitude da UIS no `concise` e no rodapé); o esquema LISTADO de
+  toda tool aceita um bloco 1.3 completo, `concise` e `detailed`.
+
 ## [1.4.0] — 2026-10-08
 
 Em que versão está cada número. Um leitor do artigo do bcb no dev.to (Daniel Oliveira,

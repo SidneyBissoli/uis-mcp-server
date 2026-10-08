@@ -17,13 +17,13 @@
     "url": "https://github.com/SidneyBissoli/uis-mcp-server",
     "source": "github"
   },
-  "version": "1.4.0",
+  "version": "1.5.0",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "uis-mcp-server",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "transport": {
         "type": "stdio"
       }
@@ -42,8 +42,8 @@
         "spec": "https://github.com/SidneyBissoli/mcp-br-commons/blob/main/packages/mcp-surface/SPEC.md",
         "endpoint": "https://uis.sidneybissoli.com/mcp",
         "declared": {
-          "sha256": "2fadf3c6679c5c4af9801a1f25d6e05e11c7ade134997bedd0921637b0d3b679",
-          "lockedAt": "1.4.0"
+          "sha256": "bdb3517739d565048dcc4d741498a7defdda5eeeadc66ba054d2885946a1f705",
+          "lockedAt": "1.5.0"
         },
         "anonymous": {
           "sha256": "53cb5779bc5c61e0552b0e55bfe528128720b6f87105b24dfbb5e76720bcaed3",

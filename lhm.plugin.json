@@ -1,7 +1,7 @@
 {
   "identifier": "sidneybissoli-uis-mcp-server",
   "name": "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "icon": "🎓",
   "description": "Remote MCP server for the UNESCO Institute for Statistics (UIS): indicators on education, science/R&D, culture and communication by country, region and year — hosted, nothing to install, no API key, with source URL, data release, retrieval timestamp and licence on every answer. Everyday and US wording (enrollment, spending, preschool) is resolved to the UIS's own. Also runs locally over stdio (npm).",
   "author": "Sidney da Silva Pereira Bissoli",
@@ -86,6 +86,12 @@
                       "null"
                     ]
                   },
+                  "derivation_note": {
+                    "type": "string"
+                  },
+                  "derived": {
+                    "type": "boolean"
+                  },
                   "field_sources": {
                     "items": {
                       "additionalProperties": false,
@@ -142,6 +148,13 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "notices": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array"
                   },
                   "retrieval": {
                     "anyOf": [
@@ -207,6 +220,30 @@
                   "retrieved_at": {
                     "type": "string"
                   },
+                  "revision": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "note": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "status": {
+                        "enum": [
+                          "current",
+                          "provisional",
+                          "final"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "note"
+                    ],
+                    "type": "object"
+                  },
                   "source": {
                     "type": "string"
                   },
@@ -240,7 +277,8 @@
                   "contract_version": {
                     "enum": [
                       "1.1",
-                      "1.2"
+                      "1.2",
+                      "1.3"
                     ],
                     "type": "string"
                   },
@@ -474,6 +512,37 @@
                   "retrieved_at": {
                     "type": "string"
                   },
+                  "revision": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "note": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "status": {
+                            "enum": [
+                              "current",
+                              "provisional",
+                              "final"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "note"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "served_from_cache": {
                     "type": [
                       "boolean",
@@ -538,7 +607,7 @@
                 "type": "object"
               }
             ],
-            "description": "Provenance block (contract v1.1). concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license; detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
+            "description": "Provenance block of the portfolio. concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license, plus optional keys only when there is something to say (field_sources, notices, derived/derivation_note, revision); detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
           },
           "text": {
             "description": "Full readable content of the document (Markdown)",
@@ -612,6 +681,12 @@
                       "null"
                     ]
                   },
+                  "derivation_note": {
+                    "type": "string"
+                  },
+                  "derived": {
+                    "type": "boolean"
+                  },
                   "field_sources": {
                     "items": {
                       "additionalProperties": false,
@@ -668,6 +743,13 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "notices": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array"
                   },
                   "retrieval": {
                     "anyOf": [
@@ -733,6 +815,30 @@
                   "retrieved_at": {
                     "type": "string"
                   },
+                  "revision": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "note": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "status": {
+                        "enum": [
+                          "current",
+                          "provisional",
+                          "final"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "note"
+                    ],
+                    "type": "object"
+                  },
                   "source": {
                     "type": "string"
                   },
@@ -766,7 +872,8 @@
                   "contract_version": {
                     "enum": [
                       "1.1",
-                      "1.2"
+                      "1.2",
+                      "1.3"
                     ],
                     "type": "string"
                   },
@@ -1000,6 +1107,37 @@
                   "retrieved_at": {
                     "type": "string"
                   },
+                  "revision": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "note": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "status": {
+                            "enum": [
+                              "current",
+                              "provisional",
+                              "final"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "note"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "served_from_cache": {
                     "type": [
                       "boolean",
@@ -1064,7 +1202,7 @@
                 "type": "object"
               }
             ],
-            "description": "Provenance block (contract v1.1). concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license; detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
+            "description": "Provenance block of the portfolio. concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license, plus optional keys only when there is something to say (field_sources, notices, derived/derivation_note, revision); detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
           },
           "results": {
             "description": "Matching documents, in relevance order",
@@ -1196,6 +1334,12 @@
                       "null"
                     ]
                   },
+                  "derivation_note": {
+                    "type": "string"
+                  },
+                  "derived": {
+                    "type": "boolean"
+                  },
                   "field_sources": {
                     "items": {
                       "additionalProperties": false,
@@ -1252,6 +1396,13 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "notices": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array"
                   },
                   "retrieval": {
                     "anyOf": [
@@ -1317,6 +1468,30 @@
                   "retrieved_at": {
                     "type": "string"
                   },
+                  "revision": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "note": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "status": {
+                        "enum": [
+                          "current",
+                          "provisional",
+                          "final"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "note"
+                    ],
+                    "type": "object"
+                  },
                   "source": {
                     "type": "string"
                   },
@@ -1350,7 +1525,8 @@
                   "contract_version": {
                     "enum": [
                       "1.1",
-                      "1.2"
+                      "1.2",
+                      "1.3"
                     ],
                     "type": "string"
                   },
@@ -1584,6 +1760,37 @@
                   "retrieved_at": {
                     "type": "string"
                   },
+                  "revision": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "note": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "status": {
+                            "enum": [
+                              "current",
+                              "provisional",
+                              "final"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "note"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "served_from_cache": {
                     "type": [
                       "boolean",
@@ -1648,7 +1855,7 @@
                 "type": "object"
               }
             ],
-            "description": "Provenance block (contract v1.1). concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license; detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
+            "description": "Provenance block of the portfolio. concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license, plus optional keys only when there is something to say (field_sources, notices, derived/derivation_note, revision); detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
           },
           "rows": {
             "items": {
@@ -1780,6 +1987,12 @@
                       "null"
                     ]
                   },
+                  "derivation_note": {
+                    "type": "string"
+                  },
+                  "derived": {
+                    "type": "boolean"
+                  },
                   "field_sources": {
                     "items": {
                       "additionalProperties": false,
@@ -1836,6 +2049,13 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "notices": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array"
                   },
                   "retrieval": {
                     "anyOf": [
@@ -1901,6 +2121,30 @@
                   "retrieved_at": {
                     "type": "string"
                   },
+                  "revision": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "note": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "status": {
+                        "enum": [
+                          "current",
+                          "provisional",
+                          "final"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "note"
+                    ],
+                    "type": "object"
+                  },
                   "source": {
                     "type": "string"
                   },
@@ -1934,7 +2178,8 @@
                   "contract_version": {
                     "enum": [
                       "1.1",
-                      "1.2"
+                      "1.2",
+                      "1.3"
                     ],
                     "type": "string"
                   },
@@ -2168,6 +2413,37 @@
                   "retrieved_at": {
                     "type": "string"
                   },
+                  "revision": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "note": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "status": {
+                            "enum": [
+                              "current",
+                              "provisional",
+                              "final"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "note"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "served_from_cache": {
                     "type": [
                       "boolean",
@@ -2232,7 +2508,7 @@
                 "type": "object"
               }
             ],
-            "description": "Provenance block (contract v1.1). concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license; detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
+            "description": "Provenance block of the portfolio. concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license, plus optional keys only when there is something to say (field_sources, notices, derived/derivation_note, revision); detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
           },
           "showing": {
             "type": "number"
@@ -2395,6 +2671,12 @@
                       "null"
                     ]
                   },
+                  "derivation_note": {
+                    "type": "string"
+                  },
+                  "derived": {
+                    "type": "boolean"
+                  },
                   "field_sources": {
                     "items": {
                       "additionalProperties": false,
@@ -2451,6 +2733,13 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "notices": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array"
                   },
                   "retrieval": {
                     "anyOf": [
@@ -2516,6 +2805,30 @@
                   "retrieved_at": {
                     "type": "string"
                   },
+                  "revision": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "note": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "status": {
+                        "enum": [
+                          "current",
+                          "provisional",
+                          "final"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "note"
+                    ],
+                    "type": "object"
+                  },
                   "source": {
                     "type": "string"
                   },
@@ -2549,7 +2862,8 @@
                   "contract_version": {
                     "enum": [
                       "1.1",
-                      "1.2"
+                      "1.2",
+                      "1.3"
                     ],
                     "type": "string"
                   },
@@ -2783,6 +3097,37 @@
                   "retrieved_at": {
                     "type": "string"
                   },
+                  "revision": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "note": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "status": {
+                            "enum": [
+                              "current",
+                              "provisional",
+                              "final"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "note"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "served_from_cache": {
                     "type": [
                       "boolean",
@@ -2847,7 +3192,7 @@
                 "type": "object"
               }
             ],
-            "description": "Provenance block (contract v1.1). concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license; detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
+            "description": "Provenance block of the portfolio. concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license, plus optional keys only when there is something to say (field_sources, notices, derived/derivation_note, revision); detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
           },
           "showing": {
             "type": "number"
