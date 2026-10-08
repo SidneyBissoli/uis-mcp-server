@@ -6,6 +6,26 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.3.2] — 2026-10-07
+
+A impressão digital da superfície passa a ir **na entrada do MCP Registry**, para o
+cliente conferir. **Nenhuma tool, resource ou resposta muda** — o sha da superfície
+declarada é o mesmo travado em 1.3.0 (`5478ce4b7500`).
+
+### Adicionado
+
+- `server.json` publica, sob `_meta["io.modelcontextprotocol.registry/publisher-provided"]`,
+  o sha256 da superfície declarada e quem responde sem credencial no endpoint
+  publicado (forma `mcp-surface/1`, SPEC.md do `@sbissoli/mcp-surface` 0.5.0). Um host
+  pode recalcular na primeira conexão e recusar, ou pedir nova aprovação, se divergir.
+  Ideia de dois leitores do artigo do replay (Mike Dabydeen e Valentina Koniukhova, dev.to).
+- `npm run surface:lock` grava o bloco (`mcp-surface registro`); o teste da trava
+  reprova `server.json` que publique outra coisa que a trava.
+- `publish.yml`: depois do `mcp-publisher publish`, `mcp-surface conferir-registro` lê
+  a entrada desta versão no registro e a compara com o endpoint no ar, como um cliente
+  faria, sem ler a trava.
+- README / LEIA-ME: como conferir por conta própria (`verify.mjs`, sem dependência).
+
 ## [1.3.1] — 2026-10-06
 
 Versão **patch**, só dependências: SDK do MCP 2.1.0 → 2.3.0 e `agents`

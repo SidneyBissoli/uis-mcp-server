@@ -8,20 +8,22 @@
     {
       "src": "https://uis.sidneybissoli.com/icon.png",
       "mimeType": "image/png",
-      "sizes": ["512x512"]
+      "sizes": [
+        "512x512"
+      ]
     }
   ],
   "repository": {
     "url": "https://github.com/SidneyBissoli/uis-mcp-server",
     "source": "github"
   },
-  "version": "1.3.1",
+  "version": "1.3.2",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "uis-mcp-server",
-      "version": "1.3.1",
+      "version": "1.3.2",
       "transport": {
         "type": "stdio"
       }
@@ -32,5 +34,36 @@
       "type": "streamable-http",
       "url": "https://uis.sidneybissoli.com/mcp"
     }
-  ]
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "io.github.sidneybissoli/mcp-surface": {
+        "form": "mcp-surface/1",
+        "spec": "https://github.com/SidneyBissoli/mcp-br-commons/blob/main/packages/mcp-surface/SPEC.md",
+        "endpoint": "https://uis.sidneybissoli.com/mcp",
+        "declared": {
+          "sha256": "5478ce4b75001460ee0103e29ce6c0f48fbf6bb2212250e22207fdb145529a93",
+          "lockedAt": "1.3.0"
+        },
+        "anonymous": {
+          "sha256": "53cb5779bc5c61e0552b0e55bfe528128720b6f87105b24dfbb5e76720bcaed3",
+          "answers": {
+            "initialize": true,
+            "ping": true,
+            "tools/list": true,
+            "resources/list": true,
+            "resources/templates/list": true,
+            "prompts/list": false,
+            "tools/call": true
+          },
+          "call": {
+            "name": "uis_search_indicators",
+            "arguments": {
+              "query": "literacy"
+            }
+          }
+        }
+      }
+    }
+  }
 }
