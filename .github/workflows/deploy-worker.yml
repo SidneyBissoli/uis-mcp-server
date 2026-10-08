@@ -3,7 +3,8 @@ name: Deploy to Cloudflare Workers
 # POR QUE ESTE WORKFLOW EXISTE
 #
 # Até 30/08/2026 este repositório não tinha workflow de deploy NENHUM: o único
-# era o publish.yml, que nem publica (o pacote é `private`). Todo deploy saía na
+# era o publish.yml, que na época nem publicava (o pacote era `private`; desde a
+# 0.4.0 publica o runtime stdio no npm). Todo deploy saía na
 # mão, e a deriva que isso produz já foi medida nos irmãos em 29/08/2026 — npm
 # em 0.3.1 contra endpoint em 0.3.0 no ilo, 4.0.2 contra 4.0.1 no ibge, 3.5.1
 # contra 3.5.0 no senado; no bcb chegou a servir descrições de tool 12x menores
@@ -14,6 +15,8 @@ name: Deploy to Cloudflare Workers
 # raiz, `main` apontando para src/index.ts, transpilado pelo próprio wrangler).
 # Não há subprojeto `worker/` nem passo de "buildar a raiz antes", que nos
 # irmãos bcb e ibge é obrigatório porque lá o Worker importa de ../../dist.
+# O `npm run build` (tsc → dist/cli.js) existe desde a 0.4.0, mas é do runtime
+# stdio que vai ao npm; o Worker não o usa.
 #
 # Dois gatilhos:
 #  - push em main nos caminhos que afetam o Worker;
@@ -27,10 +30,9 @@ name: Deploy to Cloudflare Workers
 #   CLOUDFLARE_API_TOKEN  — token com permissão "Workers Scripts: Edit"
 #   CLOUDFLARE_ACCOUNT_ID — conta em que o worker é publicado
 #
-# SE UM DIA ENTRAR AQUI UM GATE DE mcpscore como o do ilo: o job que audita o
-# ENDPOINT não pode ser disparado pelo mesmo push que este workflow. Os dois
-# correriam em paralelo, e a auditoria mediria o código anterior. No ilo o
-# gatilho do job remoto é o TÉRMINO deste workflow, pela mesma razão.
+# O GATE DE mcpscore (mcpscore.yml) audita o ENDPOINT no TÉRMINO deste
+# workflow, não no mesmo push: os dois correriam em paralelo, e a auditoria
+# mediria o código anterior. O código do PR é auditado à parte, pelo stdio.
 
 on:
   push:

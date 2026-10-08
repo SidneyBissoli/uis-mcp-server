@@ -1,5 +1,6 @@
 /**
- * Catálogo UIS em D1 (mesma database do catálogo ILOSTAT, tabelas próprias
+ * Catálogo UIS em D1 (database própria, `uis-catalog` no wrangler.jsonc — não a
+ * do catálogo ILOSTAT, que é `ilostat-catalog`; tabelas
  * `uis_indicators`/`uis_geounits`/`uis_meta`) — busca 100% local, sem chamada ao
  * upstream por consulta. Medição do mini-spike (docs/06): 5.063 indicadores em
  * 4 temas + 462 geo units. Sem D1 (runtime stdio, src/cli.ts), delega ao

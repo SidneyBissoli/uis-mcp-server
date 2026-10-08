@@ -29,16 +29,27 @@ name: mcpscore (contrato de qualidade)
 # a segunda também é notícia, não ruído: é uma exigência de conformidade que
 # passou a existir. Quem baixar este piso está decidindo não saber.
 #
-# UM JOB SÓ, e a ausência do outro é deliberada. O irmão ilo-mcp-server tem um
-# segundo job que audita o CÓDIGO DO PR pelo transporte stdio. Aqui não existe
-# stdio: o repositório inteiro é o Worker, sem `bin` e sem dist/cli.js. A
-# alternativa — subir `wrangler dev` no runner e auditar localhost — mediria a
-# coisa errada: sem `CF-Connecting-IP` todas as requisições caem no mesmo balde
-# do rate limit e o burst de 20 estoura. Medido em 30/08/2026: 8 de 46
-# requisições voltaram 429, e o auditor leu isso como três regras de segurança
-# reprovadas e dois cursores devolvendo -32603. Nada disso era o servidor.
+# DOIS JOBS, como no irmão ilo-mcp-server. O gate do PR mede o CÓDIGO DO PR
+# pelo stdio (`dist/cli.js`, o mesmo `buildServer` do Worker); o pós-deploy
+# mede o que FOI AO AR. São perguntas diferentes.
 #
-# O GATILHO É O TÉRMINO DO DEPLOY, não o push. Este job mede o ENDPOINT, e o
+# Até 08/10/2026 havia um job só, e este cabeçalho dizia que aqui não existia
+# stdio. Era verdade em 30/08/2026 e deixou de ser na 0.4.0, quando entraram
+# `src/cli.ts`, o `bin` e a publicação no npm — o texto ficou e a premissa
+# vencida manteve o PR sem gate. Auditar `wrangler dev` continua errado (sem
+# `CF-Connecting-IP` todas as requisições caem no mesmo balde do rate limit:
+# medido em 30/08/2026, 8 de 46 voltaram 429 e o auditor leu como três regras
+# de segurança reprovadas); o stdio não tem esse problema, porque não passa
+# pela borda.
+#
+# PISO DO STDIO: 87. Medido em 08/10/2026 (mcpscore local, mesmo dia e mesma
+# versão do auditor no ilo): uis 116/133 = 87,2%, ilo 136/153 = 88,9%. Nenhuma
+# regra reprovada em nenhum dos dois, e as regras comuns têm o mesmo resultado:
+# os 17 pontos que faltam são os MESMOS nos dois (prontidão para a spec
+# 2026-07-28, 13/30). O uis fica abaixo só porque não serve prompts e o
+# denominador é menor — o mesmo efeito do histórico acima, ao contrário.
+#
+# O JOB REMOTO ESPERA O TÉRMINO DO DEPLOY, não o push. Ele mede o ENDPOINT, e o
 # deploy-worker.yml roda no mesmo push — em paralelo, sem ordem garantida.
 # Disparar pelo push faria a auditoria medir o código anterior e reprovar por
 # causa do relógio, não do servidor. Foi exatamente a armadilha corrigida no
@@ -50,6 +61,9 @@ name: mcpscore (contrato de qualidade)
 # meio minuto de runner.
 
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_run:
     workflows: ["Deploy to Cloudflare Workers"]
     types: [completed]
@@ -66,6 +80,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  stdio:
+    name: contrato no código do PR (stdio)
+    # O eco do deploy não traz código novo — o PR e o push já mediram este
+    # commit. O semanal entra: o que muda sem commit é a versão do auditor (o
+    # `uvx` não pina) e a árvore de dependências.
+    if: github.event_name != 'workflow_run'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - name: Build (o auditor precisa do bundle, não do fonte)
+        run: npm run build
+      - uses: astral-sh/setup-uv@v7
+      - name: Auditar o servidor local
+        run: uvx mcpscore --fail-under 87 --stdio node dist/cli.js
+
   remoto:
     name: contrato no que está no ar (streamable http)
     if: >-
