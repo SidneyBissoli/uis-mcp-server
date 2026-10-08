@@ -5,7 +5,7 @@
  *  - uis_list_geo_units   — 462 códigos de país/região (D1);
  *  - uis_get_data         — dados via Data API, release fixada, footnotes.
  *
- * Segregação de licenças (contrato v1.0, §Segregação): este servidor é
+ * Segregação de licenças (contrato de proveniência, §Segregação): este servidor é
  * exclusivamente UIS/CC BY-SA — a separação do ILOSTAT (CC BY) é estrutural,
  * por servidores distintos.
  */

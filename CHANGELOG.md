@@ -6,6 +6,37 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.5.0] — 2026-10-08
+
+Provenance contract: second step of the v1.2 rollout and first step of v1.3
+(`@sbissoli/mcp-provenance` 0.4.0, contract §8). **What a reader gets does not change**:
+this server never merges sub-sources, so the `concise` block and the text footer stay
+byte-identical; only `contract_version` in the `detailed` block moves from 1.1 to 1.2.
+
+### Changed
+
+- The server now emits contract **1.2** (`contractVersion` in `PROVENANCE_OPTIONS`). The
+  `uis://guide/provenance` resource reads the version from the provenance context, not
+  from the library default.
+- `@sbissoli/mcp-provenance` `^0.4.0` and `@sbissoli/mcp-upstream` `^0.4.2`.
+- Every tool's `outputSchema` declares the four optional v1.3 keys (`notices`, `derived`,
+  `derivation_note`, `revision`), taken verbatim from the package — so the day the server
+  switches to 1.3, connectors already hold a schema that accepts them.
+- Every canonical block carries `revision: { status: "current", note }`, the note reusing
+  what the server already says about UIS releases revising past years. It is not on the
+  wire until the server emits 1.3. `derived` stays `false` (CC BY-SA handling unchanged).
+- Hand-written texts no longer pin a contract version ("contract v1.1"): the provenance
+  `outputSchema` description, README/LEIA-ME and code comments.
+- New surface: lock, `server.json` and `lhm.plugin.json` re-locked.
+
+### Tests
+
+- `tests/provenance-contrato.test.ts`: the emitted version is the server's choice (and the
+  resource shows it); switching to 1.2 leaves `concise` and footer byte-identical to 1.1;
+  the canonical block carries the decided `revision`; a preview of what 1.3 will show
+  (UIS qualifier/magnitude notices in `concise` and footer); the LISTED schema of every
+  tool accepts a complete 1.3 block, `concise` and `detailed`.
+
 ## [1.4.0] — 2026-10-08
 
 Em que versão está cada número. Um leitor do artigo do bcb no dev.to (Daniel Oliveira,

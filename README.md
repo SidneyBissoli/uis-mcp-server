@@ -233,7 +233,7 @@ builds this runtime (used by the Glama registry).
 Typical flow: `uis_search_indicators` to find an indicator code → `uis_list_geo_units` for
 country/region codes → `uis_get_data` with year filters.
 
-Every response carries the **provenance block v1.1**
+Every response carries the portfolio's **provenance block**
 ([`@sbissoli/mcp-provenance`](https://www.npmjs.com/package/@sbissoli/mcp-provenance), modes
 `concise`/`detailed` via the `provenance_mode` parameter) on three channels:
 `structuredContent`, namespaced `_meta` (`com.sidneybissoli.uis/*`) and a text footer.

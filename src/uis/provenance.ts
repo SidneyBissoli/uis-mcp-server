@@ -6,7 +6,7 @@
  * Browser, regime que governa a Data API — a própria documentação da API declara
  * a licença). Atribuição obrigatória com URL completa + data de extração.
  *
- * Segregação (contrato v1.1, §Segregação): este servidor serve EXCLUSIVAMENTE a
+ * Segregação (contrato de proveniência, §Segregação): este servidor serve EXCLUSIVAMENTE a
  * UIS — a segregação CC BY / CC BY-SA em relação ao ILOSTAT (servidor irmão
  * ilo-mcp-server) é estrutural: os dois regimes nunca coabitam um servidor.
  */
@@ -51,7 +51,7 @@ export interface UisProvenanceInput {
 }
 
 /**
- * Bloco canônico v1.1 para uma resposta da UIS. `retrieval` é o que o
+ * Bloco canônico para uma resposta da UIS. `retrieval` é o que o
  * coletor da chamada mediu (idas, tentativas, anomalias — `upstream.ts`);
  * `null` quando nada foi à origem (catálogo D1, acerto de KV) ou fora de um
  * coletor. `retrieved_at` continua sendo o instante da extração original,
@@ -76,8 +76,22 @@ export function uisProvenance(input: UisProvenanceInput): CanonicalProvenance {
     ...(input.notices?.length ? { notices: input.notices } : {}),
     served_from_cache: input.servedFromCache ?? null,
     retrieval: currentRetrieval(),
+    revision: UIS_REVISION,
   });
 }
+
+/**
+ * Situação de revisão (contrato §3, v1.3): `current` em toda resposta — o valor é o da
+ * release vigente da UIS, e uma release nova pode revisá-lo. Nunca `final`: a UIS não
+ * declara valor a valor que um número não muda mais (decisão do dono, 08/10/2026). A
+ * `note` reaproveita o que o servidor já publica nas instructions e na descrição de
+ * `uis_get_data` (Parte 1, 1.4.0) — nenhuma afirmação nova sobre a fonte. Enquanto o
+ * servidor emitir 1.2 a chave não sai no fio; fica no canônico.
+ */
+export const UIS_REVISION = {
+  status: "current",
+  note: "Values are those of the UIS release named in data_vintage; a new release can revise past years (new national data, re-estimation).",
+} as const;
 
 /**
  * O bloco de proveniência como extras de envelope — `structuredContent`

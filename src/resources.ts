@@ -220,7 +220,7 @@ Every tool response carries a provenance block (contract v${provenance.contractV
 - **\`retrieved_at\`** — when this server fetched from the UIS, in UTC. On a
   cached response it is the timestamp of the ORIGINAL fetch, not of the cache
   hit: \`served_from_cache\` tells the two apart.
-- **\`retrieval\`** (contract v1.1) — the origin diagnostic of this call, measured by the server:
+- **\`retrieval\`** — the origin diagnostic of this call, measured by the server:
   \`requests\` (distinct calls made to the UIS Data API), \`attempts\` (including retries),
   \`anomalies\` overcome on the way (\`timeout\`, \`network\`, \`rate_limited\`, \`http_5xx\`,
   \`http_4xx\`, \`malformed_body\`, each with a count) and \`unstable\` — \`true\` when anything

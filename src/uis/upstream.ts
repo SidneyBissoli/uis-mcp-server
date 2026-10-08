@@ -1,6 +1,6 @@
 /**
  * A ida à origem: timeout, retry, orçamento — e a CONTAGEM que alimenta o bloco
- * `retrieval` do contrato de proveniência v1.1.
+ * `retrieval` do contrato de proveniência.
  *
  * Até a 1.0.0 nenhum dos três `fetch` deste servidor (release corrente, dados,
  * catálogo em memória do stdio) tinha timeout, retry ou AbortSignal: uma
