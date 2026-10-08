@@ -13,7 +13,7 @@ export const SERVER_CONFIG = {
   /** Nome curto do servidor (handshake MCP, /status, landing). */
   name: "uis-mcp-server",
   /** Versão do servidor — manter em sincronia com package.json. */
-  version: "1.3.2",
+  version: "1.4.0",
   /** Título de exibição (clientes MCP mostram ao usuário). */
   title: "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
   /**
@@ -56,7 +56,10 @@ export const SERVER_CONFIG = {
     "uis_search_indicators to find an indicator code, uis_list_geo_units for country/region " +
     "codes, then uis_get_data with year filters. `search`/`fetch` implement the ChatGPT Deep " +
     "Research contract over the same catalogue (ids `ind:<code>`) — prefer the uis_* tools when " +
-    "they are available. Do not use this server for statistics not published by the UIS (e.g. " +
+    "they are available. Every value is the one in the UIS data release named in data_vintage; a new " +
+    "release can revise past years (new national data, re-estimation), so the same query can return " +
+    "different numbers once it becomes the default, and a record's qualifier/magnitude flags (e.g. UIS " +
+    "estimate) say how a value was obtained - read them before comparing. Do not use this server for statistics not published by the UIS (e.g. " +
     "labour, health, trade, GDP).",
   /**
    * Hostnames aceitos no header Host. A lista SUBSTITUI os defaults do

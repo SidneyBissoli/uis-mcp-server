@@ -353,7 +353,9 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         "exist is an error carrying the UIS API's own wording, never an empty result: zero rows " +
         "means the codes are real and the selection has no data, and the hint then relays what " +
         "the UIS reported (including the indicator's available year range). When only SOME of the " +
-        "requested codes exist, the matching rows are returned with `warnings` naming the rest.",
+        "requested codes exist, the matching rows are returned with `warnings` naming the rest. Values are " +
+        "those of the release named in data_vintage: a new UIS release can revise past years, and " +
+        "`qualifier`/`magnitude` on a record flag how the value was obtained (e.g. UIS estimate).",
       inputSchema: z.object({
         indicators: z
           .array(z.string().min(1))
