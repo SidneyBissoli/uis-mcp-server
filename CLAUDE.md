@@ -125,8 +125,11 @@ teste roda antes do `registro`. Qualquer um confere de fora:
   `wrangler.jsonc`, `surface.lock.json`, o próprio workflow) e dispatch: testes ANTES do
   wrangler, deploy, versão hospedada = `package.json`, smoke de produção e
   `mcp-surface verificar` (o no ar = a trava). Sem os secrets da Cloudflare, o job se pula.
-- `mcpscore.yml` — catraca de conformidade com piso 100, contra PRODUÇÃO. Dispara no TÉRMINO
-  do deploy (`workflow_run`), não no push — senão auditaria o código anterior — e toda semana.
+- `mcpscore.yml` — catraca de conformidade em dois jobs. `stdio`: o CÓDIGO DO PR, por
+  `dist/cli.js`, piso 87 (medido em 08/10/2026; a diferença para o 88 do ilo é só o
+  denominador, sem prompts aqui) — em PR, push e semanal. `remoto`: PRODUÇÃO, piso 100, no
+  TÉRMINO do deploy (`workflow_run`), não no push — senão auditaria o código anterior — e
+  toda semana.
 - `publish.yml` — tag `v*`: npm (trusted publishing/OIDC) → espera o npm expor a versão →
   MCP Registry → `mcp-surface conferir-registro` (a entrada da versão × o ar, como um
   cliente). **Não cria a release do GitHub.**
