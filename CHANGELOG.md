@@ -6,6 +6,22 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.4.0] — 2026-10-08
+
+Em que versão está cada número. Um leitor do artigo do bcb no dev.to (Daniel Oliveira,
+sobre os dados XBRL da SEC) apontou que o servidor tem de dizer se o número é revisável.
+Medido aqui: toda consulta já fixa a release da UIS e o `data_vintage` a nomeia, mas o
+texto só dizia que "a mesma consulta devolve os mesmos números até a UIS publicar outra" —
+não que a release nova pode rever anos passados.
+
+### Alterado
+
+- `uis_get_data` e as `instructions` dizem que todo valor é o da release nomeada no
+  `data_vintage`, que uma release nova pode rever anos passados (dado nacional novo,
+  reestimação), e que `qualifier`/`magnitude` dizem como o valor foi obtido (ex.:
+  estimativa da UIS).
+- Superfície declarada nova: trava, `server.json` e `lhm.plugin.json` regravados.
+
 ## [1.3.2] — 2026-10-07
 
 A impressão digital da superfície passa a ir **na entrada do MCP Registry**, para o

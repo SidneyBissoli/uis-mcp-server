@@ -1,7 +1,7 @@
 {
   "identifier": "sidneybissoli-uis-mcp-server",
   "name": "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "icon": "🎓",
   "description": "Remote MCP server for the UNESCO Institute for Statistics (UIS): indicators on education, science/R&D, culture and communication by country, region and year — hosted, nothing to install, no API key, with source URL, data release, retrieval timestamp and licence on every answer. Everyday and US wording (enrollment, spending, preschool) is resolved to the UIS's own. Also runs locally over stdio (npm).",
   "author": "Sidney da Silva Pereira Bissoli",
@@ -1111,7 +1111,7 @@
         "openWorldHint": true,
         "readOnlyHint": true
       },
-      "description": "Statistical records from the UNESCO Institute for Statistics Data API, filtered by indicator codes (from uis_search_indicators, up to 25), geo unit codes (from uis_list_geo_units) and year range. Set include_footnotes for per-record source notes. Returns raw UIS records only — it does not aggregate, convert or otherwise transform values; ILO labour statistics live in the sibling ILOSTAT MCP server. Broad queries are rejected with the record count — narrow by geo unit or years. A code that does not exist is an error carrying the UIS API's own wording, never an empty result: zero rows means the codes are real and the selection has no data, and the hint then relays what the UIS reported (including the indicator's available year range). When only SOME of the requested codes exist, the matching rows are returned with `warnings` naming the rest.",
+      "description": "Statistical records from the UNESCO Institute for Statistics Data API, filtered by indicator codes (from uis_search_indicators, up to 25), geo unit codes (from uis_list_geo_units) and year range. Set include_footnotes for per-record source notes. Returns raw UIS records only — it does not aggregate, convert or otherwise transform values; ILO labour statistics live in the sibling ILOSTAT MCP server. Broad queries are rejected with the record count — narrow by geo unit or years. A code that does not exist is an error carrying the UIS API's own wording, never an empty result: zero rows means the codes are real and the selection has no data, and the hint then relays what the UIS reported (including the indicator's available year range). When only SOME of the requested codes exist, the matching rows are returned with `warnings` naming the rest. Values are those of the release named in data_vintage: a new UIS release can revise past years, and `qualifier`/`magnitude` on a record flag how the value was obtained (e.g. UIS estimate).",
       "inputSchema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
