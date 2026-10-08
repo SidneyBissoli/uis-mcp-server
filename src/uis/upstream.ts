@@ -69,9 +69,12 @@
  * teste) a ida ganha um descartável — a política vale — e a proveniência sai
  * `retrieval: null` ("não medido"), nunca quebra.
  *
- * `retrieved_at` continua vindo do KV/`nowIso()`, NÃO de `call.retrievedAt()`:
- * o coletor não vê o KV, e o instante relevante de um acerto de cache é o da
- * extração original, guardado junto ao valor. Os três downloads paralelos do
+ * O acerto de KV da release é registrado no coletor (`recordCache`, com o instante
+ * da extração original guardado junto ao valor) e a linha do catálogo do `fetch`
+ * também (o instante do seed): não contam no `retrieval` — não foram idas à
+ * origem —, mas entram no `field_sources` que `uisProvenance` monta pelo
+ * `call.fieldSource`, e o `retrieved_at` do bloco é o mais antigo entre as
+ * partes (desde a 1.5.1; até a 1.5.0 era o dos dados, o mais novo). Os três downloads paralelos do
  * catálogo em memória (`Promise.all`) contam como 3 idas na chamada que os
  * dispara — a primeira busca do stdio — e nunca mais (promise compartilhada).
  */

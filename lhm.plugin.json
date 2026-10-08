@@ -1,7 +1,7 @@
 {
   "identifier": "sidneybissoli-uis-mcp-server",
   "name": "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "icon": "🎓",
   "description": "Remote MCP server for the UNESCO Institute for Statistics (UIS): indicators on education, science/R&D, culture and communication by country, region and year — hosted, nothing to install, no API key, with source URL, data release, retrieval timestamp and licence on every answer. Everyday and US wording (enrollment, spending, preschool) is resolved to the UIS's own. Also runs locally over stdio (npm).",
   "author": "Sidney da Silva Pereira Bissoli",

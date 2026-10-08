@@ -89,6 +89,9 @@ export interface UisReleaseWithOrigin {
 
 const RELEASE_KV_KEY = "uis:default-version";
 
+/** O endpoint da release corrente — também a `source_url` da sub-fonte "release" na proveniência. */
+export const UIS_RELEASE_URL = `${UIS_BASE}/versions/default`;
+
 interface Cached<T> {
   retrievedAt: string;
   value: T;
@@ -97,12 +100,21 @@ interface Cached<T> {
 /**
  * Release corrente (`/versions/default`) — KV TTL 24 h. É a fonte do
  * `data_vintage` UIS e a `version` fixada em toda consulta de dados.
+ *
+ * O acerto de KV é registrado no coletor da chamada (`recordCache`) com o
+ * instante da extração ORIGINAL: não conta como ida à origem no `retrieval`
+ * (contrato §3), mas entra no instante e no `served_from_cache` da resposta.
+ * Até a 1.5.0 este instante era devolvido e descartado por quem chamava, e a
+ * resposta de dados dizia "extraído agora" com uma release de até 24 h.
  */
 export async function getDefaultRelease(env: Env): Promise<UisReleaseWithOrigin> {
+  const url = UIS_RELEASE_URL;
   const hit = await env.UIS_CACHE?.get<Cached<UisRelease>>(RELEASE_KV_KEY, "json");
-  if (hit) return { release: hit.value, retrievedAt: hit.retrievedAt, servedFromCache: true };
+  if (hit) {
+    if (!Number.isNaN(Date.parse(hit.retrievedAt))) upstreamCall().recordCache(url, hit.retrievedAt);
+    return { release: hit.value, retrievedAt: hit.retrievedAt, servedFromCache: true };
+  }
 
-  const url = `${UIS_BASE}/versions/default`;
   // `!ok` de qualquer status (404 incluído) sempre foi `UisUpstreamError`
   // aqui — a tradução do pacote preserva isso.
   const body = await getUisJson<{
@@ -187,10 +199,18 @@ export interface UisDataWithOrigin {
   records: UisRecord[];
   /** As dicas que a fonte mandou — vazio quando ela não tem ressalva nenhuma. */
   hints: UisHint[];
+  /** Instante da extração dos DADOS (buscados nesta chamada — dados nunca são cacheados). */
   retrievedAt: string;
   /** URL canônica que reproduz a consulta, com a release fixada (vai na proveniência). */
   sourceUrl: string;
   release: UisRelease;
+  /**
+   * A release é OUTRA parte da resposta, de outro endpoint e quase sempre de outro
+   * instante (KV, até 24 h): dela saem `data_vintage` e `dataset.version`. A
+   * proveniência a declara como sub-fonte própria (`field_sources`).
+   */
+  releaseRetrievedAt: string;
+  releaseServedFromCache: boolean;
 }
 
 /**
@@ -210,7 +230,8 @@ export function uisDataUrl(query: UisDataQuery, version: string): string {
 
 /** Dados nunca são cacheados: toda chamada é um fetch real ao upstream. */
 export async function fetchUisData(env: Env, query: UisDataQuery): Promise<UisDataWithOrigin> {
-  const { release } = await getDefaultRelease(env);
+  const { release, retrievedAt: releaseRetrievedAt, servedFromCache: releaseServedFromCache } =
+    await getDefaultRelease(env);
   const url = uisDataUrl(query, release.version);
   let body: { records?: UisRecord[]; hints?: UisHint[] };
   try {
@@ -251,7 +272,7 @@ export async function fetchUisData(env: Env, query: UisDataQuery): Promise<UisDa
       "nao_encontrado",
     );
   }
-  return { records, hints, retrievedAt, sourceUrl: url, release };
+  return { records, hints, retrievedAt, sourceUrl: url, release, releaseRetrievedAt, releaseServedFromCache };
 }
 
 /** A `message` do corpo JSON do 400 da UIS; `undefined` se o corpo não for esse JSON. */

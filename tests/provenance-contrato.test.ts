@@ -9,8 +9,10 @@
  * - um texto mostrar ao cliente a versão PADRÃO da lib (`CONTRACT_VERSION`) em vez da
  *   escolhida pelo servidor (`provenance.contractVersion`) — a resource
  *   `uis://guide/provenance` interpola a versão;
- * - ligar a 1.2 mudar o que o leitor recebe: o uis não funde sub-fontes, então o
- *   `concise` e o rodapé têm de sair byte a byte iguais aos da 1.1;
+ * - ligar a 1.2 mudar o que o leitor recebe numa resposta de uma parte só (as tools de
+ *   catálogo): o `concise` e o rodapé têm de sair byte a byte iguais aos da 1.1. (As que
+ *   fundem partes — `uis_get_data`, `fetch` — levam `field_sources` desde a 1.5.1; ver
+ *   tests/retrieved-at-mais-antigo.test.ts);
  * - a `revision` decidida (`current` + a nota que o servidor já publica) não chegar ao
  *   canônico — chave que a lib não conhece some sem erro (contrato §8), então se assere a
  *   PRESENÇA;
@@ -33,7 +35,12 @@ import { buildServer } from "../src/server.js";
 import { noticesFromUisRecords } from "../src/tools/uis.js";
 import { UIS_REVISION, provenance, uisProvenance } from "../src/uis/provenance.js";
 
-/** Um bloco como o de `uis_get_data`, com avisos da UIS (qualifier/magnitude). */
+/**
+ * Um bloco de UMA parte só, com avisos da UIS (qualifier/magnitude). Até a 1.5.0 era
+ * "como o de `uis_get_data`"; desde a 1.5.1 o de `uis_get_data` junta release + dados e
+ * leva `field_sources` (tests/retrieved-at-mais-antigo.test.ts). O que se prende aqui é a
+ * regra da lib para resposta sem fusão — a das tools de catálogo.
+ */
 function blocoDeDados(): CanonicalProvenance {
   return uisProvenance({
     dataset: { id: "CR.1", version: "20260507-91260335", name: null },
@@ -69,7 +76,7 @@ describe("a versão do contrato é a escolhida pelo servidor", () => {
   });
 });
 
-describe("ligar a 1.2 não muda o que o leitor recebe (o uis não funde sub-fontes)", () => {
+describe("ligar a 1.2 não muda o bloco de uma parte só (sem fusão de sub-fontes)", () => {
   it("concise e rodapé byte a byte iguais aos da 1.1", () => {
     const p12 = blocoDeDados();
     const p11 = { ...p12, contract_version: "1.1" } as CanonicalProvenance;

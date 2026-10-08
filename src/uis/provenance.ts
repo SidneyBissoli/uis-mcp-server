@@ -14,6 +14,7 @@
 import { createProvenanceContext, type CanonicalProvenance } from "@sbissoli/mcp-provenance";
 import { PROVENANCE_OPTIONS } from "../config.js";
 import { UIS_API_VERSION, UIS_BASE, type UisRelease } from "./api.js";
+import { currentCall } from "@sbissoli/mcp-upstream/als";
 import { currentRetrieval } from "./upstream.js";
 
 export const provenance = createProvenanceContext(PROVENANCE_OPTIONS);
@@ -40,24 +41,64 @@ export function uisDataVintage(release: UisRelease): string {
   return `${release.version} (published ${release.publicationDate.slice(0, 10)})`;
 }
 
+/**
+ * Uma parte da resposta que veio de OUTRO endpoint ou de OUTRO instante (contrato §3,
+ * `field_sources`): a release corrente (KV), os dados (agora), a linha do catálogo
+ * (seed). Cada parte traz o próprio instante e se veio do cache — o servidor sabe;
+ * `fields` diz quais campos do payload ela produziu.
+ */
+export interface UisPart {
+  fields: string[];
+  sourceUrl: string;
+  datasetId?: string | null;
+  dataVintage?: string | null;
+  /** Instante REAL da extração desta parte (o original, se veio do cache). */
+  retrievedAt: string;
+  servedFromCache: boolean;
+}
+
 export interface UisProvenanceInput {
   dataset?: { id: string; version: string | null; name: string | null } | null;
   dimensionKey?: Record<string, string> | null;
   dataVintage?: string | null;
+  /**
+   * Instante da extração da parte que `sourceUrl` nomeia — é o que a citação embute
+   * (a UIS exige a URL completa E a data de extração DELA). Com `parts`, o
+   * `retrieved_at` do bloco é o mais antigo entre este e os das partes.
+   */
   retrievedAt: string;
   sourceUrl: string;
+  /** Sem `parts`: o que o chamador declara. Com `parts`: ignorado — vale "todas do cache". */
   servedFromCache?: boolean | null;
   notices?: string[];
+  /** Partes de procedência distinta; duas ou mais viram `field_sources`. */
+  parts?: UisPart[];
 }
 
 /**
  * Bloco canônico para uma resposta da UIS. `retrieval` é o que o
  * coletor da chamada mediu (idas, tentativas, anomalias — `upstream.ts`);
  * `null` quando nada foi à origem (catálogo D1, acerto de KV) ou fora de um
- * coletor. `retrieved_at` continua sendo o instante da extração original,
- * vindo do KV no acerto — não é o do coletor.
+ * coletor — acerto de cache não é ida à origem (contrato §3).
+ *
+ * `retrieved_at` é o instante REAL da extração. Resposta de uma parte só (as tools
+ * de catálogo, `search`): o dessa parte. Resposta que junta partes (`uis_get_data`:
+ * release + dados; `fetch`: linha do catálogo + release + amostra): o MAIS ANTIGO
+ * entre elas, `served_from_cache` verdadeiro só se TODAS vieram do cache, e
+ * `field_sources` com uma entrada por parte.
  */
 export function uisProvenance(input: UisProvenanceInput): CanonicalProvenance {
+  const fieldSources = input.parts && input.parts.length > 1 ? input.parts.map(fieldSourceOf) : null;
+  // O topo é o MAIS ANTIGO entre a parte citada e todas as sub-fontes — por
+  // construção (contrato §3; na 1.2 a lib lança `ProvenanceContractError` se o
+  // topo for mais novo que alguma sub-fonte). Até a 1.5.0 o topo era o instante
+  // dos dados, o mais NOVO da resposta.
+  const retrievedAt = fieldSources
+    ? new Date(Math.min(Date.parse(input.retrievedAt), ...fieldSources.map((f) => Date.parse(f.retrieved_at)))).toISOString()
+    : input.retrievedAt;
+  const servedFromCache = fieldSources
+    ? fieldSources.every((f) => f.served_from_cache === true)
+    : (input.servedFromCache ?? null);
   return provenance.build({
     source: {
       name: "UNESCO Institute for Statistics (UIS)",
@@ -68,16 +109,51 @@ export function uisProvenance(input: UisProvenanceInput): CanonicalProvenance {
     dataset: input.dataset ?? null,
     dimension_key: input.dimensionKey ?? null,
     data_vintage: input.dataVintage ?? null,
-    retrieved_at: input.retrievedAt,
+    retrieved_at: retrievedAt,
     source_url: input.sourceUrl,
     api_version: UIS_API_VERSION,
     license: UIS_LICENSE,
     citation: uisCitation(input.sourceUrl, input.retrievedAt),
     ...(input.notices?.length ? { notices: input.notices } : {}),
-    served_from_cache: input.servedFromCache ?? null,
+    served_from_cache: servedFromCache,
     retrieval: currentRetrieval(),
+    ...(fieldSources ? { field_sources: fieldSources } : {}),
     revision: UIS_REVISION,
   });
+}
+
+/**
+ * Uma parte na forma de `field_sources`. Dentro de um coletor, o instante e o cache
+ * vêm dos acessos REGISTRADOS para a URL da parte (`call.fieldSource` — rede ou
+ * `recordCache`), o caminho comum do portfólio; o que a parte declara é o piso
+ * para quando o coletor não a viu (fora de um coletor, em teste, ou parte que não
+ * passa pelo upstream). Entre os dois, vale o mais antigo e "do cache" só se ambos dizem.
+ */
+function fieldSourceOf(part: UisPart): {
+  fields: string[];
+  source_url: string;
+  dataset_id: string | null;
+  data_vintage: string | null;
+  retrieved_at: string;
+  served_from_cache: boolean;
+} {
+  const base = {
+    fields: part.fields,
+    source_url: part.sourceUrl,
+    dataset_id: part.datasetId ?? null,
+    data_vintage: part.dataVintage ?? null,
+  };
+  const lida = currentCall()?.fieldSource(base);
+  if (!lida || lida.retrieved_at === null) {
+    return { ...base, retrieved_at: part.retrievedAt, served_from_cache: part.servedFromCache };
+  }
+  const declarado = Date.parse(part.retrievedAt);
+  const visto = Date.parse(lida.retrieved_at);
+  return {
+    ...base,
+    retrieved_at: visto <= declarado ? lida.retrieved_at : part.retrievedAt,
+    served_from_cache: lida.served_from_cache === true && part.servedFromCache,
+  };
 }
 
 /**
