@@ -275,6 +275,20 @@ gasta com "qual indicador, qual código":
 - **`derived` é sempre `false`** — o servidor não transforma valores.
 - **Idioma: inglês; fuso: UTC** (a UIS publica os dados em inglês).
 
+### Impressão digital da superfície, conferível pelo registro
+
+Cada release publica, na sua entrada do [MCP Registry](https://registry.modelcontextprotocol.io),
+o sha256 da superfície que esta versão serve (`initialize`, tools, resources, prompts) e quais
+métodos respondem sem credencial. Mudar a superfície sem subir a versão reprova o build; a
+impressão digital no registro deixa o cliente conferir o mesmo do lado dele. Forma canônica e
+procedimento: [SPEC.md do `@sbissoli/mcp-surface`](https://github.com/SidneyBissoli/mcp-br-commons/blob/main/packages/mcp-surface/SPEC.md)
+(em inglês). Para conferir por conta própria (Node 18+, sem dependência):
+
+```sh
+curl -sO https://raw.githubusercontent.com/SidneyBissoli/mcp-br-commons/main/packages/mcp-surface/exemplos/verify.mjs
+node verify.mjs io.github.SidneyBissoli/uis-mcp-server
+```
+
 ## Licença dos dados e atribuição
 
 - Dados da UIS: **CC BY-SA 4.0** (termos do UIS Data Browser, que regem a Data API; licença
