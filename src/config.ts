@@ -13,9 +13,9 @@ export const SERVER_CONFIG = {
   /** Nome curto do servidor (handshake MCP, /status, landing). */
   name: "uis-mcp-server",
   /** Versão do servidor — manter em sincronia com package.json. */
-  version: "1.5.1",
+  version: "1.6.0",
   /** Título de exibição (clientes MCP mostram ao usuário). */
-  title: "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
+  title: "UNESCO UIS Education Statistics MCP",
   /**
    * Site do servidor. Declarado em TRÊS lugares que não podem discordar —
    * `server.json` (o que o registry publica), `package.json` (homepage) e

@@ -1,4 +1,4 @@
-# UNESCO Institute for Statistics (UIS) — MCP Server
+# UNESCO UIS Education Statistics MCP Server
 
 ![MCP](https://img.shields.io/badge/MCP-Streamable%20HTTP-1f6feb)
 [![CI](https://github.com/SidneyBissoli/uis-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/SidneyBissoli/uis-mcp-server/actions/workflows/ci.yml)
@@ -48,6 +48,9 @@ In plain language, inside the MCP client — the assistant picks the tool and th
 - "Which geo unit code does the UIS use for Côte d'Ivoire, and which regional aggregates exist?"
   (`uis_list_geo_units`)
 
+Three of them — enrolment, literacy and education spending — run against the live server, with
+the tool calls and what came back: [uis.sidneybissoli.com/examples](https://uis.sidneybissoli.com/examples).
+
 **Ask in your words, not UNESCO's.** The UIS is worded in British statistical English, and the
 catalogue is matched on the indicator name — so the everyday or US word used to return *nothing
 at all*. Measured over the 5,063 indicators of the official catalogue (2026-09-16), and fixed
@@ -92,6 +95,8 @@ Versions measured on 2026-10-02.
 | [uisapi](https://cran.r-project.org/package=uisapi) 0.1.1 (R, CRAN) | Community R client of the UIS Data API (not by UIS staff); also lists the bulk files | You are in R and want UIS series in a data frame for analysis |
 | [unesco-reader](https://pypi.org/project/unesco-reader/) 3.1.1 (Python, PyPI) | Community Python client of the UIS Data API | Your pipeline is Python |
 | [global-education-mcp](https://github.com/malkreide/global-education-mcp) 0.4.0 (MCP, Python) | Another MCP server: UIS Data API plus the OECD *Education at a Glance* API | You want UIS and OECD education data side by side in one local server |
+| [unesco-mcp](https://github.com/lpicci96/unesco-mcp) (MCP, Python, PyPI) | Another MCP server over the UIS API, run locally with `uvx`; catalogue cached in SQLite, ranking and comparison tools (measured 2026-10-13) | You prefer a local server with analysis tools built in |
+| [UNESCO UIS Statistics Scraper](https://apify.com/thirdwatch/unesco-uis-statistics-scraper) (Apify actor) | Community actor over the same Data API, exposed as a tool by Apify's general MCP server; needs an Apify account, pay per result (US$ 0.002–0.004 per row by plan, 2026-10-13); output has source URL but no data release | You already run Apify pipelines and want UIS rows in an Apify dataset |
 | [WDI](https://cran.r-project.org/package=WDI) / [wbstats](https://cran.r-project.org/package=wbstats) (R), [wbgapi](https://pypi.org/project/wbgapi/) (Python) | World Bank clients; WDI republishes many UIS education series, with a lag | You want UIS education series next to World Bank indicators |
 | [UIS Bulk Data Download Service](https://databrowser.uis.unesco.org/resources/bulk) | The UIS's own CSV files per data release (SDG and OPRI) | You need whole datasets, not answers |
 | [UIS Data API](https://api.uis.unesco.org/api/public/documentation/) | The source itself, which this server calls — no key | You are building your own client and want full control |

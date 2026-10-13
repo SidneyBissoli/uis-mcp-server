@@ -1,8 +1,8 @@
 {
   "$comentario": "Impressão digital da superfície (@sbissoli/mcp-surface). Não editar à mão: `npm run surface:lock` regrava, e só aceita superfície nova sob versão nova.",
   "declarada": {
-    "versao": "1.5.0",
-    "sha256": "bdb3517739d565048dcc4d741498a7defdda5eeeadc66ba054d2885946a1f705",
+    "versao": "1.6.0",
+    "sha256": "3a27ab17bf3a6ba1697c28cfb478ab36f2698d4e53e523b851fe3de0e0eb3b4e",
     "conteudo": {
       "initialize": {
         "capabilities": {
@@ -26,7 +26,7 @@
             }
           ],
           "name": "uis-mcp-server",
-          "title": "UNESCO UIS — Education, Science & Culture Statistics (provenance-first)",
+          "title": "UNESCO UIS Education Statistics MCP",
           "websiteUrl": "https://uis.sidneybissoli.com"
         }
       },

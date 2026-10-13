@@ -1,4 +1,4 @@
-# Instituto de Estatística da UNESCO (UIS) — MCP Server
+# UNESCO UIS Education Statistics MCP Server (estatísticas de educação da UNESCO)
 
 ![MCP](https://img.shields.io/badge/MCP-Streamable%20HTTP-1f6feb)
 [![CI](https://github.com/SidneyBissoli/uis-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/SidneyBissoli/uis-mcp-server/actions/workflows/ci.yml)
@@ -43,6 +43,9 @@ assistente:
 - "Qual a taxa de alfabetização de adultos na Argentina e no Chile, por sexo?" (`uis_get_data`)
 - "Que código a UIS usa para a Costa do Marfim, e que agregados regionais existem?"
   (`uis_list_geo_units`)
+
+Três delas — matrícula, alfabetização e gasto em educação — rodadas no servidor em produção,
+com o caminho de ferramentas e o que voltou: [uis.sidneybissoli.com/examples](https://uis.sidneybissoli.com/examples).
 
 **Pergunte com a sua palavra, não com a da UNESCO.** A UIS escreve em inglês estatístico
 britânico e a busca casa o nome do indicador — por isso a palavra do dia a dia (ou a grafia
@@ -89,6 +92,8 @@ do assistente, com fonte, release de dados e licença grudadas na resposta. Vers
 | [uisapi](https://cran.r-project.org/package=uisapi) 0.1.1 (R, CRAN) | Cliente R comunitário da UIS Data API (não é da equipe da UIS); também lista os arquivos em lote | Você está em R e quer as séries da UIS num data frame, para analisar |
 | [unesco-reader](https://pypi.org/project/unesco-reader/) 3.1.1 (Python, PyPI) | Cliente Python comunitário da UIS Data API | Seu pipeline é Python |
 | [global-education-mcp](https://github.com/malkreide/global-education-mcp) 0.4.0 (MCP, Python) | Outro servidor MCP: UIS Data API mais a API *Education at a Glance* da OCDE | Você quer dados de educação da UIS e da OCDE lado a lado num servidor local |
+| [unesco-mcp](https://github.com/lpicci96/unesco-mcp) (MCP, Python, PyPI) | Outro servidor MCP sobre a API da UIS, rodado localmente com `uvx`; catálogo em cache SQLite, ferramentas de ranking e comparação (medido em 13/10/2026) | Você prefere servidor local com ferramentas de análise embutidas |
+| [UNESCO UIS Statistics Scraper](https://apify.com/thirdwatch/unesco-uis-statistics-scraper) (ator da Apify) | Ator comunitário sobre a mesma Data API, exposto como ferramenta pelo servidor MCP geral da Apify; exige conta na Apify, cobra por resultado (US$ 0,002–0,004 por linha conforme o plano, 13/10/2026); a saída traz a URL da fonte, mas não a release dos dados | Você já roda pipelines na Apify e quer as linhas da UIS num dataset de lá |
 | [WDI](https://cran.r-project.org/package=WDI) / [wbstats](https://cran.r-project.org/package=wbstats) (R), [wbgapi](https://pypi.org/project/wbgapi/) (Python) | Clientes do Banco Mundial; o WDI republica muitas séries de educação da UIS, com defasagem | Você quer as séries de educação da UIS junto com indicadores do Banco Mundial |
 | [UIS Bulk Data Download Service](https://databrowser.uis.unesco.org/resources/bulk) | Os arquivos CSV da própria UIS, por release de dados (SDG e OPRI) | Você precisa da base inteira, não de respostas |
 | [UIS Data API](https://api.uis.unesco.org/api/public/documentation/) | A própria fonte, que este servidor consulta — sem chave | Você está construindo o seu próprio cliente |
