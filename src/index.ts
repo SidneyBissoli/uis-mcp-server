@@ -14,6 +14,7 @@ import { checkAuth } from "./auth.js";
 import { SERVER_CONFIG } from "./config.js";
 import { ICON_PNG_BASE64 } from "./icon.js";
 import { landingResponse } from "./landing.js";
+import { EXAMPLES_ROUTE, examplesResponse } from "./examples.js";
 import { discoveryResponseForPath } from "./discovery.js";
 import { logger } from "./logger.js";
 import { cursorRejection } from "./pagination.js";
@@ -76,6 +77,7 @@ export default {
 
     // --- Rotas públicas, servidas antes de qualquer auth ---
     if (url.pathname === "/") return landingResponse();
+    if (url.pathname === EXAMPLES_ROUTE) return examplesResponse();
     // robots.txt, sitemap.xml e a chave do IndexNow vêm ANTES da auth: um
     // rastreador não tem credencial, e robots.txt atrás de Bearer é o mesmo que
     // não ter robots.txt.

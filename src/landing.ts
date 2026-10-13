@@ -23,6 +23,7 @@
  */
 
 import { SERVER_CONFIG, LANDING } from "./config.js";
+import { EXAMPLES_ROUTE } from "./examples.js";
 
 /** Escapa texto de configuração para interpolação segura em HTML. */
 function esc(s: string): string {
@@ -47,6 +48,7 @@ const T = {
     repo: "Código-fonte no GitHub",
     pacote: "Pacote no npm",
     docs: "Documentação",
+    exemplos: "Perguntas de exemplo e comparação com as alternativas",
     protocolo: "Protocolo",
     tambem: "Also in English",
   },
@@ -62,6 +64,7 @@ const T = {
     repo: "Source on GitHub",
     pacote: "Package on npm",
     docs: "Documentation",
+    exemplos: "Example questions and comparison with the alternatives",
     protocolo: "Protocol",
     tambem: "Também em português",
   },
@@ -94,6 +97,7 @@ export function landingHtml(): string {
   };
 
   const listaLinks = [
+    `<li><a href="${EXAMPLES_ROUTE}">${t.exemplos}</a></li>`,
     `<li><a href="${esc(l.repoUrl)}">${t.repo}</a></li>`,
     l.npmUrl ? `<li><a href="${esc(l.npmUrl)}">${t.pacote}</a></li>` : "",
     l.docsUrl ? `<li><a href="${esc(l.docsUrl)}">${t.docs}</a></li>` : "",

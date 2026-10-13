@@ -54,3 +54,20 @@ describe("websiteUrl: manifesto × package × serverInfo", () => {
     expect(SERVER_CONFIG.websiteUrl.endsWith("/")).toBe(false);
   });
 });
+
+/**
+ * O TÍTULO segue a mesma regra, em três fichas: `server.json` (o MCP Registry),
+ * `lhm.plugin.json` (o LobeHub, que só muda por `plugin update`) e o handshake.
+ * Em 13/10/2026 ele virou nome de busca — "UNESCO UIS Education Statistics MCP",
+ * da ação `geo:uis-mcp-server` — e trocar só um dos três deixaria cada diretório
+ * com um nome, que é justamente o que a ação quer evitar.
+ */
+describe("título: manifesto × LobeHub × serverInfo", () => {
+  it("server.json leva o título do config", () => {
+    expect(leJson("server.json").title).toBe(SERVER_CONFIG.title);
+  });
+
+  it("a ficha do LobeHub leva o mesmo título", () => {
+    expect(leJson("lhm.plugin.json").name).toBe(SERVER_CONFIG.title);
+  });
+});

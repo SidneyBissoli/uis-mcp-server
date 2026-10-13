@@ -19,16 +19,17 @@
  * desenho — ela prova posse do domínio justamente por estar servida nele, então
  * versioná-la não é vazamento.
  *
- * O sitemap tem UMA URL: a raiz. É o que este domínio serve de conteúdo — os
- * artigos moram no GitHub. Isso é pouco, e é honesto: um sitemap não pode
- * listar URL de outro host. Servir os artigos aqui é o passo que tornaria este
- * arquivo valer mais do que a linha `Sitemap:`.
+ * O sitemap tinha UMA URL, a raiz, até 13/10/2026 — os artigos moram no
+ * GitHub, e um sitemap não pode listar URL de outro host. Desde então lista
+ * também `/examples` (perguntas de exemplo e comparação, `src/examples.ts`),
+ * a primeira página de conteúdo servida aqui.
  */
 
 import { SERVER_CONFIG } from "./config.js";
+import { EXAMPLES_ROUTE } from "./examples.js";
 
 /** Quando a superfície mudou pela última vez — vira o `lastmod` do sitemap. */
-const ULTIMA_MUDANCA = "2026-08-31";
+const ULTIMA_MUDANCA = "2026-10-13";
 
 function texto(corpo: string, tipo = "text/plain; charset=utf-8"): Response {
   return new Response(corpo, {
@@ -65,6 +66,12 @@ export function sitemapXml(): string {
     <lastmod>${ULTIMA_MUDANCA}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${SERVER_CONFIG.websiteUrl}${EXAMPLES_ROUTE}</loc>
+    <lastmod>${ULTIMA_MUDANCA}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
 `;

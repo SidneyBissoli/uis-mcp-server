@@ -6,6 +6,34 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.6.0] — 2026-10-13
+
+Visibilidade (ação `geo:uis-mcp-server`, aprovada em 05/10/2026): a sigla "UIS" é opaca, e
+a busca por "UNESCO education statistics MCP" achava o ator da Apify e o `uisapi`, não este
+servidor.
+
+### Mudado
+
+- **Título de exibição: "UNESCO UIS Education Statistics MCP"** (era "UNESCO UIS — Education,
+  Science & Culture Statistics (provenance-first)"), no handshake (`serverInfo.title`), no
+  `server.json` (MCP Registry) e no `lhm.plugin.json` (LobeHub). Muda a superfície declarada:
+  trava regravada. `tests/serverinfo-sync.test.ts` agora prende os três títulos juntos. O
+  mesmo nome abre o README/LEIA-ME e a descrição do npm.
+- README e LEIA-ME: link para `/examples` e duas linhas novas na comparação (`unesco-mcp` e o
+  ator da Apify), medidas em 13/10/2026.
+
+### Adicionado
+
+- **Página `/examples`** no domínio próprio: três perguntas (matrícula no ensino superior,
+  alfabetização de jovens por sexo, gasto público em educação como % do PIB) com o caminho de
+  ferramentas e um trecho do que voltou — rodadas em produção em 13/10/2026, release da UIS
+  `20260507-91260335` nomeada na página —, dados estruturados `FAQPage` e comparação medida no
+  mesmo dia com o ator da Apify (não existe um servidor MCP dedicado da Apify para a UIS: é um
+  ator raspador, pago por resultado, exposto pelo servidor MCP geral da Apify), `unesco-mcp`,
+  `global-education-mcp` e os clientes `uisapi`/`unesco-reader`. Listada no `sitemap.xml` e
+  linkada da landing. Guarda: `tests/examples.test.ts` (código citado existe no catálogo; rota
+  no sitemap, na landing e antes da auth).
+
 ## [1.5.1] — 2026-10-08
 
 Conserto de contrato de proveniência (§3, `retrieved_at` e `field_sources`). Duas tools
