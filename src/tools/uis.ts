@@ -137,27 +137,69 @@ export function uisListGeoUnitsHandler(env: Env) {
 }
 
 /**
- * Avisos da origem: tipos/subtipos de footnote com contagem (o canal de
- * qualificação da UIS — ex.: fonte da pesquisa domiciliar, estimativa UIS).
- * O texto integral de cada footnote permanece na linha correspondente.
+ * Frases legíveis das flags de cada registro, na ordem dos enums `Magnitude` e
+ * `Qualifier` da OpenAPI da UIS Data API (`/api/public/openapi/schema.json`), de
+ * onde vem o sentido de cada código. `magnitude` diz a NATUREZA do valor (o que o
+ * número exibido significa: 0 verdadeiro, 0 de "não se aplica", em branco…);
+ * `qualifier` diz como o valor foi OBTIDO (estimativa nacional ou da UIS).
+ * `one`/`many` completam "1 value …" / "N values …".
+ */
+const UIS_FLAG_PHRASES: Record<"magnitude" | "qualifier", Record<string, { one: string; many: string }>> = {
+  magnitude: {
+    NIL: { one: "is nil (true zero)", many: "are nil (true zero)" },
+    NA: {
+      one: "is not applicable to the reporting country (shown as 0)",
+      many: "are not applicable to the reporting country (shown as 0)",
+    },
+    SUPP: { one: "is withheld at the country's request (blank)", many: "are withheld at the country's request (blank)" },
+    LOWREL: { one: "is of low reliability", many: "are of low reliability" },
+    INCLUDED: { one: "is blank, counted within another figure", many: "are blank, counted within another figure" },
+    INCLUDES: { one: "also includes data of another category", many: "also include data of another category" },
+  },
+  qualifier: {
+    NAT_EST: { one: "is a national estimate", many: "are national estimates" },
+    UIS_EST: { one: "is a UIS estimate", many: "are UIS estimates" },
+  },
+};
+
+function flagNotice(field: "magnitude" | "qualifier", code: string, n: number): string {
+  const phrase = UIS_FLAG_PHRASES[field][code];
+  const values = n === 1 ? "1 value" : `${n} values`;
+  if (phrase) return `${values} ${n === 1 ? phrase.one : phrase.many}`;
+  // Código fora do enum publicado: rótulo cru, sem inventar sentido.
+  const label = field === "magnitude" ? "Magnitude" : "Qualifier";
+  return `${label} ${code} (code not documented by UIS): ${values}`;
+}
+
+/**
+ * Avisos da origem, com contagem: tipos/subtipos de footnote (o texto integral de
+ * cada footnote permanece na linha correspondente) e as flags `magnitude`/`qualifier`
+ * em frase legível. São avisos do DADO — dizem o que o número significa ou como foi
+ * obtido —, por isso sobem ao `notices` do bloco (contrato 1.3).
  */
 export function noticesFromUisRecords(records: UisRecord[]): string[] {
-  const counts = new Map<string, number>();
+  const footnotes = new Map<string, number>();
+  const flags: Record<"magnitude" | "qualifier", Map<string, number>> = { magnitude: new Map(), qualifier: new Map() };
   for (const r of records) {
     for (const f of r.footnotes ?? []) {
       const label = `${f.type ?? "Footnote"}${f.subtype ? ` (${f.subtype})` : ""}`;
-      counts.set(label, (counts.get(label) ?? 0) + 1);
+      footnotes.set(label, (footnotes.get(label) ?? 0) + 1);
     }
-    if (r.magnitude) {
-      const label = `Magnitude ${r.magnitude}`;
-      counts.set(label, (counts.get(label) ?? 0) + 1);
-    }
-    if (r.qualifier) {
-      const label = `Qualifier ${r.qualifier}`;
-      counts.set(label, (counts.get(label) ?? 0) + 1);
-    }
+    if (r.magnitude) flags.magnitude.set(r.magnitude, (flags.magnitude.get(r.magnitude) ?? 0) + 1);
+    if (r.qualifier) flags.qualifier.set(r.qualifier, (flags.qualifier.get(r.qualifier) ?? 0) + 1);
   }
-  return [...counts.entries()].map(([label, n]) => `${label}: ${n} record(s)`).sort();
+  const out = [...footnotes.entries()].map(([label, n]) => `${label}: ${n} record(s)`).sort();
+  for (const field of ["magnitude", "qualifier"] as const) {
+    // Ordem do enum da fonte; códigos não documentados depois, em ordem alfabética.
+    const known = Object.keys(UIS_FLAG_PHRASES[field]);
+    const codes = [...flags[field].keys()].sort((a, b) => {
+      const ia = known.indexOf(a);
+      const ib = known.indexOf(b);
+      return (ia < 0 ? known.length : ia) - (ib < 0 ? known.length : ib) || a.localeCompare(b);
+    });
+    for (const code of codes) out.push(flagNotice(field, code, flags[field].get(code)!));
+  }
+  return out;
 }
 
 export function uisGetDataHandler(env: Env) {
@@ -375,8 +417,10 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         "means the codes are real and the selection has no data, and the hint then relays what " +
         "the UIS reported (including the indicator's available year range). When only SOME of the " +
         "requested codes exist, the matching rows are returned with `warnings` naming the rest. Values are " +
-        "those of the release named in data_vintage: a new UIS release can revise past years, and " +
-        "`qualifier`/`magnitude` on a record flag how the value was obtained (e.g. UIS estimate).",
+        "those of the release named in data_vintage: a new UIS release can revise past years. On a " +
+        "record, `magnitude` says what the value shown means (e.g. NA = not applicable, shown as 0; " +
+        "SUPP = withheld, blank) and `qualifier` says how it was obtained (national or UIS estimate); " +
+        "the provenance notices count them in plain words.",
       inputSchema: z.object({
         indicators: z
           .array(z.string().min(1))

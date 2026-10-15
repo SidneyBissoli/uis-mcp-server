@@ -13,7 +13,7 @@ export const SERVER_CONFIG = {
   /** Nome curto do servidor (handshake MCP, /status, landing). */
   name: "uis-mcp-server",
   /** Versão do servidor — manter em sincronia com package.json. */
-  version: "1.6.0",
+  version: "1.7.0",
   /** Título de exibição (clientes MCP mostram ao usuário). */
   title: "UNESCO UIS Education Statistics MCP",
   /**
@@ -58,8 +58,10 @@ export const SERVER_CONFIG = {
     "Research contract over the same catalogue (ids `ind:<code>`) — prefer the uis_* tools when " +
     "they are available. Every value is the one in the UIS data release named in data_vintage; a new " +
     "release can revise past years (new national data, re-estimation), so the same query can return " +
-    "different numbers once it becomes the default, and a record's qualifier/magnitude flags (e.g. UIS " +
-    "estimate) say how a value was obtained - read them before comparing. Do not use this server for statistics not published by the UIS (e.g. " +
+    "different numbers once it becomes the default. A record's magnitude flag says what the value " +
+    "shown means (a 0 can be a true zero or 'not applicable'; a blank can be withheld or counted " +
+    "elsewhere) and its qualifier flag says how it was obtained (national or UIS estimate) - read " +
+    "them before comparing. Do not use this server for statistics not published by the UIS (e.g. " +
     "labour, health, trade, GDP).",
   /**
    * Hostnames aceitos no header Host. A lista SUBSTITUI os defaults do
@@ -78,17 +80,20 @@ export const SERVER_CONFIG = {
  * Contexto de proveniência do servidor: namespace reverse-DNS próprio, inglês, UTC.
  *
  * `contractVersion` é a versão do contrato que este servidor EMITE (o padrão da lib é
- * 1.1). 1.2 = tempo 2 do rollout da v1.2 (contrato §8): o `field_sources` sai no
- * `concise` das respostas que fundem sub-fontes — no uis, `uis_get_data` (release + dados)
- * e `fetch` com amostra (catálogo + release + dados), desde a 1.5.1; até a 1.5.0 elas
- * saíam sem ele e com o instante mais NOVO no topo. Quem mostra a versão ao cliente lê
- * `provenance.contractVersion`, nunca um literal. A 1.3 liga numa sessão posterior.
+ * 1.1). Emite a 1.3 desde a 1.7.0 (tempo 2 dela; o schema a aceitava desde 08/10/2026):
+ * o `concise` leva `revision` sempre (`current`, com a nota de que uma release nova
+ * revisa anos passados) e `notices` quando os registros têm footnote ou flag
+ * `magnitude`/`qualifier` (frases legíveis, `noticesFromUisRecords`) — ausente, e não
+ * vazio, quando não há. `derived` nunca: o servidor não transforma valores. Da 1.2 segue
+ * o `field_sources` nas respostas que fundem sub-fontes (`uis_get_data`: release + dados;
+ * `fetch` com amostra: catálogo + release + dados), com o topo = o instante mais antigo.
+ * Quem mostra a versão ao cliente lê `provenance.contractVersion`, nunca um literal.
  */
 export const PROVENANCE_OPTIONS: ProvenanceContextOptions = {
   metaNamespace: "com.sidneybissoli.uis",
   locale: "en",
   timezone: "utc",
-  contractVersion: "1.2",
+  contractVersion: "1.3",
 };
 
 /**
