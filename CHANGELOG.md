@@ -6,6 +6,32 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.7.0] — 2026-10-15
+
+Tempo 2 do contrato de proveniência 1.3: o que a 1.5.1 passou a ACEITAR no esquema passa a
+SAIR nas respostas, sete dias depois, como manda o rollout em dois tempos. Minor porque a
+descrição de `uis_get_data` e as instructions mudaram (trava regravada); as chaves e os
+esquemas das tools não mudaram.
+
+### Mudado
+
+- **O servidor emite o contrato 1.3.** O bloco `concise` leva `revision` em toda resposta
+  (`current`, com a nota de que uma release nova da UIS revisa anos passados) e `notices`
+  quando os registros têm footnote ou flag — ausente, e não vazio, quando não há. `derived`
+  nunca: o servidor não transforma valores. O rodapé ganha a linha dos avisos só quando há
+  aviso; `current` não ganha linha.
+- **As flags dos registros viram frase legível nos `notices`**, com o sentido que a OpenAPI da
+  UIS Data API dá a cada código (`Magnitude`, `Qualifier`), em vez de `Magnitude NA: 1
+  record(s)`: "1 value is not applicable to the reporting country (shown as 0)", "2 values are
+  UIS estimates" — NIL, NA, SUPP, LOWREL, INCLUDED, INCLUDES, NAT_EST, UIS_EST. Código fora do
+  enum publicado sai cru, marcado "(code not documented by UIS)". As footnotes seguem como
+  estavam (`Source (Data sources): 3 record(s)`).
+- **Descrição de `uis_get_data` e instructions corrigidas:** diziam que `magnitude` e
+  `qualifier` contam "como o valor foi obtido". Só o `qualifier` diz isso; o `magnitude` diz o
+  que o número exibido significa (um 0 pode ser zero de verdade ou "não se aplica"; um branco
+  pode ser retido a pedido do país ou contado em outra cifra).
+- O guia `uis://guide/provenance` descreve `revision` e `notices`.
+
 ## [1.6.0] — 2026-10-13
 
 Visibilidade (ação `geo:uis-mcp-server`, aprovada em 05/10/2026): a sigla "UIS" é opaca, e

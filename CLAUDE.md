@@ -75,7 +75,7 @@ Bindings (`wrangler.jsonc`): KV `UIS_CACHE`, D1 `CATALOG_DB` (`uis-catalog`), DO
 Analytics Engine `ANALYTICS`, `CF_VERSION_METADATA`. Auth: sem `API_KEY` configurada o acesso
 é aberto (`src/auth.ts`) — é assim em produção.
 
-**Proveniência:** toda resposta leva o envelope do contrato (a versão emitida é `contractVersion` em `PROVENANCE_OPTIONS`, `src/config.ts` — 1.2 desde a 1.5.0; quem a mostra ao cliente lê `provenance.contractVersion`); `revision` é sempre `current` (`UIS_REVISION`, `src/uis/provenance.ts`); `retrieved_at` é sempre o
+**Proveniência:** toda resposta leva o envelope do contrato (a versão emitida é `contractVersion` em `PROVENANCE_OPTIONS`, `src/config.ts` — 1.3 desde a 1.7.0; quem a mostra ao cliente lê `provenance.contractVersion`); `revision` é sempre `current` (`UIS_REVISION`, `src/uis/provenance.ts`) e sai em todo `concise`; `notices` conta footnotes e as flags `magnitude`/`qualifier` em frase legível (`noticesFromUisRecords`, `src/tools/uis.ts`, frases da OpenAPI da UIS); `retrieved_at` é sempre o
 instante REAL da extração (para o catálogo, o do seed, gravado em `uis_meta`; respostas do
 catálogo são `served_from_cache: true`). Resposta que junta partes (`uis_get_data`: release do KV +
 dados; `fetch`: + linha do catálogo) leva `field_sources` (uma entrada por parte, `parts` em

@@ -308,11 +308,51 @@ describe("ausência: a palavra é da fonte, não a nossa", () => {
 });
 
 describe("noticesFromUisRecords", () => {
-  it("agrega footnotes, magnitude e qualifier com contagem", () => {
+  const rec = (magnitude: string | null, qualifier: string | null, footnotes: { type: string; subtype: null; value: string }[] = []) =>
+    ({ indicatorId: "X", geoUnit: "BRA", year: 2020, value: 0, magnitude, qualifier, footnotes });
+
+  it("agrega footnotes com contagem e as flags em frase legível", () => {
     const notices = noticesFromUisRecords([
-      { indicatorId: "X", geoUnit: "BRA", year: 2020, value: 1, magnitude: "NIL", qualifier: null, footnotes: [{ type: "Source", subtype: null, value: "a" }] },
-      { indicatorId: "X", geoUnit: "BRA", year: 2021, value: 2, magnitude: null, qualifier: "UIS_EST", footnotes: [{ type: "Source", subtype: null, value: "b" }] },
+      rec("NIL", null, [{ type: "Source", subtype: null, value: "a" }]),
+      rec(null, "UIS_EST", [{ type: "Source", subtype: null, value: "b" }]),
     ]);
-    expect(notices).toEqual(["Magnitude NIL: 1 record(s)", "Qualifier UIS_EST: 1 record(s)", "Source: 2 record(s)"]);
+    expect(notices).toEqual(["Source: 2 record(s)", "1 value is nil (true zero)", "1 value is a UIS estimate"]);
+  });
+
+  it("singular e plural; ordem do enum da fonte, magnitude antes de qualifier", () => {
+    const notices = noticesFromUisRecords([
+      rec(null, "UIS_EST"),
+      rec("INCLUDES", "NAT_EST"),
+      rec("INCLUDES", null),
+      rec("SUPP", "UIS_EST"),
+    ]);
+    expect(notices).toEqual([
+      "1 value is withheld at the country's request (blank)",
+      "2 values also include data of another category",
+      "1 value is a national estimate",
+      "2 values are UIS estimates",
+    ]);
+  });
+
+  it("toda flag documentada pela UIS tem frase própria", () => {
+    const codigos = { magnitude: ["NIL", "NA", "SUPP", "LOWREL", "INCLUDED", "INCLUDES"], qualifier: ["NAT_EST", "UIS_EST"] };
+    for (const m of codigos.magnitude) expect(noticesFromUisRecords([rec(m, null)])[0]).not.toMatch(/not documented|Magnitude/);
+    for (const q of codigos.qualifier) expect(noticesFromUisRecords([rec(null, q)])[0]).not.toMatch(/not documented|Qualifier/);
+    expect(noticesFromUisRecords([rec("LOWREL", null), rec("INCLUDED", null)])).toEqual([
+      "1 value is of low reliability",
+      "1 value is blank, counted within another figure",
+    ]);
+  });
+
+  it("código fora do enum: rótulo cru, sem inventar sentido, depois dos documentados", () => {
+    expect(noticesFromUisRecords([rec("XYZ", "ABC"), rec("XYZ", null), rec("NIL", null)])).toEqual([
+      "1 value is nil (true zero)",
+      "Magnitude XYZ (code not documented by UIS): 2 values",
+      "Qualifier ABC (code not documented by UIS): 1 value",
+    ]);
+  });
+
+  it("sem footnote nem flag, nenhum aviso", () => {
+    expect(noticesFromUisRecords([rec(null, null)])).toEqual([]);
   });
 });

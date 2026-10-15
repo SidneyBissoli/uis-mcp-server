@@ -239,8 +239,22 @@ Every tool response carries a provenance block (contract v${provenance.contractV
   against the UIS terms on ${UIS_LICENSE.verified_at}: ${UIS_LICENSE.terms_url}
 - **\`citation\`** — the attribution string the UIS terms require, already
   assembled: source name, full query URL and date of extraction.
+- **\`revision\`** — how final the values are. Always \`current\` here, with a note:
+  a value is the one in the release named in \`data_vintage\`, and a new UIS release
+  can revise past years (new national data, re-estimation).
+- **\`notices\`** — what the UIS says about the data in this answer, counted:
+  footnote types (\`Source (Data sources): 3 record(s)\`; each footnote's full text
+  stays on its record) and the record flags in plain words. \`magnitude\` says what
+  the value shown means — "is nil (true zero)", "is not applicable to the reporting
+  country (shown as 0)", "is withheld at the country's request (blank)", "is of low
+  reliability", "is blank, counted within another figure", "also includes data of
+  another category"; \`qualifier\` says how it was obtained — "is a national
+  estimate", "is a UIS estimate". Example: \`2 values are UIS estimates\`. A code the
+  UIS does not document is shown raw, marked "(code not documented by UIS)". Absent
+  when there is nothing to say.
 - **\`derived\`** / **\`derivation_note\`** — whether this server computed
-  anything on top of the published values, and what.
+  anything on top of the published values, and what. This server never does, so
+  the concise block leaves them out.
 
 ## How to cite
 

@@ -9,10 +9,10 @@
  * - um texto mostrar ao cliente a versão PADRÃO da lib (`CONTRACT_VERSION`) em vez da
  *   escolhida pelo servidor (`provenance.contractVersion`) — a resource
  *   `uis://guide/provenance` interpola a versão;
- * - ligar a 1.2 mudar o que o leitor recebe numa resposta de uma parte só (as tools de
- *   catálogo): o `concise` e o rodapé têm de sair byte a byte iguais aos da 1.1. (As que
- *   fundem partes — `uis_get_data`, `fetch` — levam `field_sources` desde a 1.5.1; ver
- *   tests/retrieved-at-mais-antigo.test.ts);
+ * - ligar a 1.3 (desde a 1.7.0) mudar o que o leitor recebe além do decidido: o `concise`
+ *   ganha `revision` sempre e `notices` só quando há aviso, e o rodapé do caso comum (sem
+ *   aviso) tem de sair igual ao da 1.1. (As que fundem partes — `uis_get_data`, `fetch` —
+ *   levam `field_sources` desde a 1.5.1; ver tests/retrieved-at-mais-antigo.test.ts);
  * - a `revision` decidida (`current` + a nota que o servidor já publica) não chegar ao
  *   canônico — chave que a lib não conhece some sem erro (contrato §8), então se assere a
  *   PRESENÇA;
@@ -39,9 +39,13 @@ import { UIS_REVISION, provenance, uisProvenance } from "../src/uis/provenance.j
  * Um bloco de UMA parte só, com avisos da UIS (qualifier/magnitude). Até a 1.5.0 era
  * "como o de `uis_get_data`"; desde a 1.5.1 o de `uis_get_data` junta release + dados e
  * leva `field_sources` (tests/retrieved-at-mais-antigo.test.ts). O que se prende aqui é a
- * regra da lib para resposta sem fusão — a das tools de catálogo.
+ * regra da lib para resposta sem fusão — a das tools de catálogo. O registro NA vale 0:
+ * é como a UIS o publica ("The value will be 0", OpenAPI `Magnitude`).
  */
-function blocoDeDados(): CanonicalProvenance {
+function blocoDeDados(notices = noticesFromUisRecords([
+  { indicatorId: "CR.1", geoUnit: "BRA", year: 2022, value: 90.1, qualifier: "UIS_EST" },
+  { indicatorId: "CR.1", geoUnit: "BRA", year: 2023, value: 0, magnitude: "NA" },
+] as never)): CanonicalProvenance {
   return uisProvenance({
     dataset: { id: "CR.1", version: "20260507-91260335", name: null },
     dimensionKey: { indicator: "CR.1", geoUnit: "BRA" },
@@ -49,18 +53,15 @@ function blocoDeDados(): CanonicalProvenance {
     retrievedAt: "2026-10-08T12:00:00Z",
     sourceUrl: "https://api.uis.unesco.org/api/public/data/indicators?indicator=CR.1&geoUnit=BRA&version=20260507-91260335",
     servedFromCache: false,
-    notices: noticesFromUisRecords([
-      { indicatorId: "CR.1", geoUnit: "BRA", year: 2022, value: 90.1, qualifier: "UIS_EST" },
-      { indicatorId: "CR.1", geoUnit: "BRA", year: 2023, value: 91.2, magnitude: "NA" },
-    ] as never),
+    notices,
   });
 }
 
 describe("a versão do contrato é a escolhida pelo servidor", () => {
-  it("o servidor emite 1.2 — não o padrão da lib", () => {
-    expect(provenance.contractVersion).toBe("1.2");
+  it("o servidor emite 1.3 — não o padrão da lib", () => {
+    expect(provenance.contractVersion).toBe("1.3");
     expect(PROVENANCE_OPTIONS.contractVersion).toBe(provenance.contractVersion);
-    // Se o padrão da lib um dia for 1.2, o caso abaixo deixa de provar a origem.
+    // Se o padrão da lib um dia for 1.3, o caso abaixo deixa de provar a origem.
     expect(CONTRACT_VERSION).not.toBe(provenance.contractVersion);
   });
 
@@ -70,21 +71,20 @@ describe("a versão do contrato é a escolhida pelo servidor", () => {
     expect(md).not.toContain(`contract v${CONTRACT_VERSION}`);
   });
 
+  it("a resource de proveniência descreve as chaves que a 1.3 emite", () => {
+    const md = provenanceMarkdown();
+    for (const chave of ["`revision`", "`notices`", "`derived`"]) expect(md).toContain(chave);
+    expect(md).toContain("2 values are UIS estimates");
+  });
+
   it("o bloco carrega a versão do contexto", () => {
     expect(blocoDeDados().contract_version).toBe(provenance.contractVersion);
     expect((provenance.render(blocoDeDados(), "detailed") as unknown as Record<string, unknown>).contract_version).toBe(provenance.contractVersion);
   });
 });
 
-describe("ligar a 1.2 não muda o bloco de uma parte só (sem fusão de sub-fontes)", () => {
-  it("concise e rodapé byte a byte iguais aos da 1.1", () => {
-    const p12 = blocoDeDados();
-    const p11 = { ...p12, contract_version: "1.1" } as CanonicalProvenance;
-    expect(JSON.stringify(provenance.render(p12, "concise"))).toBe(JSON.stringify(provenance.render(p11, "concise")));
-    expect(provenance.footer(p12)).toBe(provenance.footer(p11));
-  });
-
-  it("nem field_sources nem as chaves da 1.3 saem no concise", () => {
+describe("contrato 1.3 no fio: revision sempre, notices quando há, derived nunca", () => {
+  it("o concise leva revision e notices, na ordem do schema", () => {
     const c = provenance.render(blocoDeDados(), "concise") as unknown as Record<string, unknown>;
     expect(Object.keys(c)).toEqual([
       "source",
@@ -94,15 +94,33 @@ describe("ligar a 1.2 não muda o bloco de uma parte só (sem fusão de sub-font
       "retrieval",
       "citation",
       "license",
+      "notices",
+      "revision",
+    ]);
+    expect(c.revision).toEqual({ status: "current", note: UIS_REVISION.note });
+    expect(c.notices).toEqual([
+      "1 value is not applicable to the reporting country (shown as 0)",
+      "1 value is a UIS estimate",
     ]);
   });
 
-  it("no detailed, só o contract_version muda; revision fica de fora até a 1.3", () => {
-    const p12 = blocoDeDados();
-    const d12 = provenance.render(p12, "detailed") as unknown as Record<string, unknown>;
-    const d11 = provenance.render({ ...p12, contract_version: "1.1" } as CanonicalProvenance, "detailed") as unknown as Record<string, unknown>;
-    expect({ ...d12, contract_version: "1.1" }).toEqual(d11);
-    expect("revision" in d12).toBe(false);
+  it("caso comum, sem aviso: notices ausente (não vazio) e o rodapé sem linha nova", () => {
+    const p = blocoDeDados([]);
+    const c = provenance.render(p, "concise") as unknown as Record<string, unknown>;
+    expect(c).not.toHaveProperty("notices");
+    expect(c).not.toHaveProperty("derived");
+    expect(c.revision).toEqual({ status: "current", note: UIS_REVISION.note });
+    // `current` não ganha linha (contrato §6): o rodapé da 1.3 é o da 1.1.
+    const p11 = { ...p, contract_version: "1.1" } as CanonicalProvenance;
+    expect(provenance.footer(p)).toBe(provenance.footer(p11));
+  });
+
+  it("com aviso, o rodapé ganha só a linha dos avisos, nunca a nota de revisão", () => {
+    const rodape = provenance.footer(blocoDeDados());
+    expect(rodape).toContain(
+      "1 value is not applicable to the reporting country (shown as 0); 1 value is a UIS estimate",
+    );
+    expect(rodape).not.toContain(UIS_REVISION.note);
   });
 });
 
@@ -121,23 +139,6 @@ describe("revision: current, com a nota que o servidor já publica", () => {
     const p = blocoDeDados();
     expect(p.derived).toBe(false);
     expect(p.license.id).toBe("CC-BY-SA-4.0");
-  });
-});
-
-/**
- * O que a 1.3 vai mostrar ao ligar (prévia, mesmo bloco): os avisos da UIS sobem ao
- * concise e ganham linha no rodapé; `current` não ganha linha (contrato §6).
- */
-describe("prévia da 1.3 sobre o mesmo bloco", () => {
-  it("notices e revision chegam ao concise; o rodapé ganha só a linha dos avisos", () => {
-    const p13 = { ...blocoDeDados(), contract_version: "1.3" } as CanonicalProvenance;
-    const c = provenance.render(p13, "concise") as unknown as Record<string, unknown>;
-    expect(c.notices).toEqual(["Magnitude NA: 1 record(s)", "Qualifier UIS_EST: 1 record(s)"]);
-    expect(c.revision).toEqual({ status: "current", note: UIS_REVISION.note });
-    expect("derived" in c).toBe(false);
-    const rodape = provenance.footer(p13);
-    expect(rodape).toContain("Magnitude NA: 1 record(s); Qualifier UIS_EST: 1 record(s)");
-    expect(rodape).not.toContain(UIS_REVISION.note);
   });
 });
 
