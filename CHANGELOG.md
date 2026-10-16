@@ -6,6 +6,30 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [1.8.0] — 2026-10-15
+
+Dois achados da varredura de 29/09/2026 (ideias de leitores). Minor porque o `outputSchema` de
+`uis_get_data`, a descrição dela, as instructions e o guia mudaram (trava regravada).
+
+### Mudado
+
+- **`magnitude` e `qualifier` saem em TODA linha de `uis_get_data`, `null` quando a UIS não
+  publica a marca.** Até a 1.7.0 a linha omitia as chaves ausentes, contra a regra do
+  portfólio (normalização nunca omite chave; `null` é a informação de que a fonte não
+  publicou). O `outputSchema` passa a declarar a linha — `indicator`, `geo_unit`, `year`,
+  `value` (número ou `null`), `magnitude` e `qualifier` (texto ou `null`), obrigatórios — em
+  vez de `z.record` livre; `footnotes` continua só com `include_footnotes`. Novo teste no
+  percurso do cliente: registro magro leva as duas chaves `null`, e linha sem elas no fio é
+  reprovada.
+- **Unidade: o servidor diz que a fonte não a publica, em vez de inventar um campo.** Medido em
+  15/10/2026 em `/definitions/indicators` (5.063 indicadores): nem a definição nem o registro
+  trazem unidade. O fim do nome entre parênteses é unidade na maioria (`%` 2.358, `number` 954,
+  `years` 42, `millions` 40…), mas não sempre — índices de paridade (`GPIA` 902, `LPIA` 368,
+  `WPIA` 171, `NPIA`, `DPIA`, `LTPIA`), tipo de estimativa (`UIS estimate`, `modelled data`),
+  nível de ensino — e 91 nomes não têm parêntese. Extrair um `unit` dali seria publicar
+  palpite como campo. A descrição de `uis_get_data`, as instructions e o guia
+  (`uis://guide`, "Reading the codes") passam a dizer isso.
+
 ## [1.7.0] — 2026-10-15
 
 Tempo 2 do contrato de proveniência 1.3: o que a 1.5.1 passou a ACEITAR no esquema passa a

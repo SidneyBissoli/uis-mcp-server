@@ -242,8 +242,11 @@ export function uisGetDataHandler(env: Env) {
         geo_unit: r.geoUnit,
         year: r.year,
         value: r.value,
-        ...(r.magnitude ? { magnitude: r.magnitude } : {}),
-        ...(r.qualifier ? { qualifier: r.qualifier } : {}),
+        // Sempre presentes: `null` é a informação de que a UIS não publicou a marca
+        // neste registro. Omitir a chave (até a 1.7.0) deixava o cliente sem saber
+        // se o campo existe — ROADMAP, achados de 29/09/2026.
+        magnitude: r.magnitude ?? null,
+        qualifier: r.qualifier ?? null,
         ...(r.footnotes?.length ? { footnotes: r.footnotes } : {}),
       }));
 
@@ -420,7 +423,10 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         "those of the release named in data_vintage: a new UIS release can revise past years. On a " +
         "record, `magnitude` says what the value shown means (e.g. NA = not applicable, shown as 0; " +
         "SUPP = withheld, blank) and `qualifier` says how it was obtained (national or UIS estimate); " +
-        "the provenance notices count them in plain words.",
+        "the provenance notices count them in plain words; both are null when the UIS publishes no flag. " +
+        "The UIS publishes no unit field: the unit usually closes the indicator name in parentheses " +
+        "(\"(%)\", \"(number)\", \"(years)\"), but not always — a parenthesis can also name a parity " +
+        "index (GPIA), an estimate type or an education level, and some names have none.",
       inputSchema: z.object({
         indicators: z
           .array(z.string().min(1))
@@ -440,7 +446,16 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
       outputSchema: z.looseObject({
         columns: z.array(z.string()),
         rows_count: z.number(),
-        rows: z.array(z.record(z.string(), z.unknown())),
+        rows: z.array(
+          z.looseObject({
+            indicator: z.string(),
+            geo_unit: z.string(),
+            year: z.number(),
+            value: z.number().nullable(),
+            magnitude: z.string().nullable(),
+            qualifier: z.string().nullable(),
+          }),
+        ),
         ...provenanceOutputShape(),
       }),
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
