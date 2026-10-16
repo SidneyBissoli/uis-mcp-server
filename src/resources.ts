@@ -204,6 +204,15 @@ Suffixes are systematic: \`.F\` female, \`.M\` male, \`.GPIA\` adjusted gender
 parity index, \`.MOD\` modelled rather than observed. A base code with no sex
 suffix is normally "both sexes". Confirm with \`uis_search_indicators\` when the
 distinction carries the answer.
+
+**Units.** The UIS Data API publishes no unit field — neither on the indicator
+definitions nor on the records — so this server cannot hand one over. The unit
+usually closes the indicator name in parentheses: \`(%)\` on about 2,360 of the
+~5,060 indicators, \`(number)\` on about 950, then \`(years)\`, \`(millions)\`,
+\`(constant PPP$ - 2017)\`. Not always: about 1,500 names end in a parity index
+(\`(GPIA)\`, \`(LPIA)\`, \`(WPIA)\`), an estimate type (\`(UIS estimate)\`,
+\`(modelled data)\`) or an education level, and about 90 have no parenthesis.
+Read the name before stating a unit, and say so when it does not give one.
 `;
 }
 

@@ -333,6 +333,38 @@ describe("structuredContent obedece ao outputSchema anunciado", () => {
     for (const v of vs) expect(v.obtido, `${v.descricao}: ${v.mensagem ?? ""}`).toBe(v.esperado);
   });
 
+  /**
+   * Registro magro: a UIS não publica `magnitude` nem `qualifier`. Até a 1.7.0 a
+   * linha OMITIA as duas chaves e o schema (`z.record`) não as prendia — o cliente
+   * não distinguia "sem marca" de "campo que não existe". Desde a 1.8.0 elas saem
+   * sempre, `null` quando ausentes, e o schema listado as exige: linha sem elas,
+   * no fio, é reprovada pelo validador do cliente.
+   */
+  it("uis_get_data: registro magro leva magnitude/qualifier null, e o schema as exige", async () => {
+    stubUisFetch({ records: [REGISTRO_MAGRO] });
+    const client = await conectar({});
+    try {
+      const r = await chamarComoCliente(client, "uis_get_data", { indicators: ["CR.1"], geo_units: ["BRA"] });
+      const linha = (r.structuredContent as { rows: Array<Record<string, unknown>> }).rows[0];
+      expect(linha).toMatchObject({ indicator: "CR.1", value: null, magnitude: null, qualifier: null });
+      expect(Object.keys(linha ?? {})).toEqual(expect.arrayContaining(["magnitude", "qualifier"]));
+    } finally {
+      await client.close();
+    }
+
+    stubUisFetch({ records: [REGISTRO_MAGRO] });
+    const vs = await controlesNegativos(() => buildServer({}), "uis_get_data", { indicators: ["CR.1"], geo_units: ["BRA"] }, [
+      {
+        descricao: "linha sem a chave magnitude",
+        adulterar: (r) => {
+          const linhas = r.structuredContent?.rows as Array<Record<string, unknown>> | undefined;
+          if (linhas?.[0]) delete linhas[0].magnitude;
+        },
+      },
+    ]);
+    for (const v of vs) expect(v.obtido, `${v.descricao}: ${v.mensagem ?? ""}`).toBe(v.esperado);
+  });
+
   it("toda tool anunciada declara outputSchema e tem ao menos um caso", async () => {
     const { tools } = await clienteBase.listTools();
     const cobertas = new Set(CASOS.map((c) => c.nome));

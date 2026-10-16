@@ -13,7 +13,7 @@ export const SERVER_CONFIG = {
   /** Nome curto do servidor (handshake MCP, /status, landing). */
   name: "uis-mcp-server",
   /** Versão do servidor — manter em sincronia com package.json. */
-  version: "1.7.0",
+  version: "1.8.0",
   /** Título de exibição (clientes MCP mostram ao usuário). */
   title: "UNESCO UIS Education Statistics MCP",
   /**
@@ -61,7 +61,9 @@ export const SERVER_CONFIG = {
     "different numbers once it becomes the default. A record's magnitude flag says what the value " +
     "shown means (a 0 can be a true zero or 'not applicable'; a blank can be withheld or counted " +
     "elsewhere) and its qualifier flag says how it was obtained (national or UIS estimate) - read " +
-    "them before comparing. Do not use this server for statistics not published by the UIS (e.g. " +
+    "them before comparing. The UIS publishes no unit field: the unit usually closes the indicator " +
+    "name in parentheses (%, number, years), but a parenthesis can also be a parity index (GPIA) or " +
+    "an estimate type. Do not use this server for statistics not published by the UIS (e.g. " +
     "labour, health, trade, GDP).",
   /**
    * Hostnames aceitos no header Host. A lista SUBSTITUI os defaults do
