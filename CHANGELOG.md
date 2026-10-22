@@ -6,6 +6,34 @@ seguem o `package.json` (espelhado em `server.json` e `src/config.ts` pelo hook
 a 0.4.0, uma publicação no npm (`uis-mcp-server`, runtime stdio) e no MCP
 Registry; a superfície de cada versão está em `baselines/`.
 
+## [Unreleased]
+
+### Mudado
+
+- **Smoke pós-deploy: fonte fora NÃO é deploy quebrado.** `scripts/smoke-mcp.mjs` passa a
+  decidir pelo `criarSmoke` do `@sbissoli/mcp-live-source` 0.3.0 (devDependency nova), não
+  por frase. Defeito medido em 22/10/2026 nos irmãos: o bcb reprovou duas reexecuções com o
+  SGS em 502 e o ibge ficou vermelho com o Worker na versão certa e o IBGE recusando
+  conexões de parte das nuvens — o painel abriu "Deploy FALHOU" para deploy que não falhou.
+  O smoke só vê o que viaja no fio (`isError` + texto; a classe do erro da origem não
+  viaja). Agora: tool com `isError` inesperado → sonda direta na Data API (`createUpstream`
+  sem retry, 8 s) → fonte fora = `::warning title=Fonte indisponível`, saída 0; fonte
+  servindo = vermelho com o texto da tool. Asserção que lança (HTTP, JSON-RPC, contrato)
+  continua defeito do deploy e sai vermelha sem sondar. Duas sondas, mesmo host
+  (`api.uis.unesco.org`): `release` (`/versions/default`, corpo com `version`) e `dados`
+  (`/data/indicators?indicator=CR.1&geoUnit=BRA&start=2015&end=2015`, corpo com `records`);
+  `SMOKE_SONDA_RELEASE` / `SMOKE_SONDA_DADOS` apontam cada uma para outro lugar. Só
+  `uis_get_data` e o `fetch` (amostra) as nomeiam; `uis_search_indicators`,
+  `uis_list_geo_units`, a paginação e o `search` leem o D1 e declaram `sondas: []`. Erros
+  pedagógicos (`>25` indicadores, `fetch` de id desconhecido) viram `esperaErro: true`.
+  Cobertura mantida: rota pública `/mcp`, contrato de sessão, `initialize`, `tools/list` =
+  `/status.tool_names` e as mesmas chamadas e asserções de antes; `fetch` e `uis_get_data`
+  ficam "não medidos" (não vermelhos) quando o `search`/`uis_search_indicators` de que
+  dependem falhou. Novo `--sonda`: só pergunta à UIS se ela está servindo (sai 0/2) — para
+  ler um deploy vermelho. Conclusão e anotações vão ao `$GITHUB_STEP_SUMMARY`. Provado
+  contra a produção (todas as verificações verdes), `--sonda` com as duas sondas servindo e
+  com uma sonda desviada para porta fechada saindo 2.
+
 ## [1.8.0] — 2026-10-15
 
 Dois achados da varredura de 29/09/2026 (ideias de leitores). Minor porque o `outputSchema` de

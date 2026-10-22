@@ -34,10 +34,19 @@ npm run build                   # runtime stdio → dist/cli.js (o que vai ao np
 node scripts/dump-surface.mjs --stdio   # fumaça do build: initialize → tools/resources/prompts
 npm run deploy                  # wrangler deploy (o CI faz isso; ver CI)
 node scripts/smoke-mcp.mjs      # smoke contra PRODUÇÃO
+node scripts/smoke-mcp.mjs --sonda   # só pergunta à UIS Data API se ela está servindo (sai 0/2) — para ler um deploy vermelho
 npm run surface:lock            # regrava surface.lock.json + o bloco do server.json (ver Trava)
 npm run manifest:lhm            # regenera lhm.plugin.json (ficha do LobeHub) da superfície real
 npm run eval                    # eval com MODELO REAL — CUSTA DINHEIRO
 ```
+
+O smoke roda sobre o `criarSmoke` do `@sbissoli/mcp-live-source` (dev): tool que responde
+`isError` inesperado dispara uma sonda direta na Data API que a verificação nomeia
+(`sondas: ["release", "dados"]` em `uis_get_data` e `fetch`; `sondas: []` nas que só leem o
+D1); fonte fora = `::warning title=Fonte indisponível`, saída 0 (o passo do deploy fica
+verde); fonte servindo = vermelho com o texto da tool. Verificação que lança (asserção,
+HTTP, JSON-RPC) é defeito do deploy e nunca sonda. `SMOKE_SONDA_RELEASE` /
+`SMOKE_SONDA_DADOS` desviam cada sonda para outra URL.
 
 **`npm run eval` cobra a API da Anthropic, à parte de qualquer assinatura.** Nunca rodar
 sem o dono pedir a rodada; sem `ANTHROPIC_API_KEY` o script só imprime instruções e sai
