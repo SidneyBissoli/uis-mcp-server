@@ -10,6 +10,13 @@ Registry; a superfície de cada versão está em `baselines/`.
 
 ### Mudado
 
+- **Smoke pós-deploy: tool que falhou com a fonte de pé é chamada de novo antes de ser
+  julgada** (`@sbissoli/mcp-live-source` ^0.4.0, dev; só o lock e esta nota mudam aqui).
+  Decisão do dono em 22/10/2026 sobre uma medição no bcb: a sonda mínima respondia do cache
+  enquanto pedidos pesados caíam por timeout, e checks saíam vermelhos "com a fonte no ar"
+  numa rodada e verdes na seguinte. Agora `verificar` repete a chamada uma vez: passou na 2ª
+  = soluço da origem (aviso `Fonte indisponível`); falhou de novo = vermelho. Fonte fora na
+  sonda, erro esperado e asserção que lança não repetem.
 - **Smoke pós-deploy: fonte fora NÃO é deploy quebrado.** `scripts/smoke-mcp.mjs` passa a
   decidir pelo `criarSmoke` do `@sbissoli/mcp-live-source` 0.3.0 (devDependency nova), não
   por frase. Defeito medido em 22/10/2026 nos irmãos: o bcb reprovou duas reexecuções com o
