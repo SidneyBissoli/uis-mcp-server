@@ -7,7 +7,7 @@
 [![npm](https://img.shields.io/npm/v/uis-mcp-server?label=npm&color=cb3837)](https://www.npmjs.com/package/uis-mcp-server)
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-blue)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.SidneyBissoli%2Fuis-mcp-server/versions)
 [![uis-mcp-server MCP server](https://glama.ai/mcp/servers/SidneyBissoli/uis-mcp-server/badges/score.svg)](https://glama.ai/mcp/servers/SidneyBissoli/uis-mcp-server)
-[![smithery badge](https://smithery.ai/badge/sidneybissoli/uis-mcp-server)](https://smithery.ai/servers/sidneybissoli/uis-mcp-server)
+[![LightNow capabilities](https://lightnow.ai/badge/io.github.SidneyBissoli/uis-mcp-server)](https://lightnow.ai/servers/io.github.SidneyBissoli/uis-mcp-server)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE.md)
 [![Status](https://img.shields.io/website?url=https%3A%2F%2Fuis.sidneybissoli.com%2Fhealth&up_message=online&down_message=offline&label=status)](https://uis.sidneybissoli.com/status)
 
