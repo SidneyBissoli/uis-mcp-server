@@ -1,7 +1,7 @@
 {
   "identifier": "sidneybissoli-uis-mcp-server",
   "name": "UNESCO UIS Education Statistics MCP",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "icon": "🎓",
   "description": "Remote MCP server for the UNESCO Institute for Statistics (UIS): indicators on education, science/R&D, culture and communication by country, region and year — hosted, nothing to install, no API key, with source URL, data release, retrieval timestamp and licence on every answer. Everyday and US wording (enrollment, spending, preschool) is resolved to the UIS's own. Also runs locally over stdio (npm).",
   "author": "Sidney da Silva Pereira Bissoli",
@@ -54,6 +54,7 @@
         "additionalProperties": false,
         "properties": {
           "attribution": {
+            "description": "Source URLs the figures came from (the provenance source_url of each block), for linking the citation",
             "items": {
               "type": "string"
             },
@@ -662,6 +663,7 @@
         "additionalProperties": false,
         "properties": {
           "attribution": {
+            "description": "Source URLs the figures came from (the provenance source_url of each block), for linking the citation",
             "items": {
               "type": "string"
             },
@@ -1309,12 +1311,14 @@
         "additionalProperties": {},
         "properties": {
           "attribution": {
+            "description": "Source URLs the figures came from (the provenance source_url of each block), for linking the citation",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "columns": {
+            "description": "Core fields of each row, in reading order",
             "items": {
               "type": "string"
             },
@@ -1858,6 +1862,7 @@
             "description": "Provenance block of the portfolio. concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license, plus optional keys only when there is something to say (field_sources, notices, derived/derivation_note, revision); detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
           },
           "rows": {
+            "description": "Raw UIS records, one per indicator, geo unit and year; value is untransformed",
             "items": {
               "additionalProperties": {},
               "properties": {
@@ -1902,6 +1907,7 @@
             "type": "array"
           },
           "rows_count": {
+            "description": "Number of records returned",
             "type": "number"
           }
         },
@@ -1970,12 +1976,14 @@
         "additionalProperties": {},
         "properties": {
           "attribution": {
+            "description": "Source URLs the figures came from (the provenance source_url of each block), for linking the citation",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "geo_units": {
+            "description": "Geo units: id is the code for uis_get_data, type is NATIONAL or REGIONAL",
             "items": {
               "additionalProperties": false,
               "properties": {
@@ -1999,12 +2007,15 @@
             "type": "array"
           },
           "has_more": {
+            "description": "True when more matches remain after this page",
             "type": "boolean"
           },
           "next_offset": {
+            "description": "Offset for the next page; present only when has_more is true",
             "type": "number"
           },
           "offset": {
+            "description": "Results skipped before this page",
             "type": "number"
           },
           "provenance": {
@@ -2545,9 +2556,11 @@
             "description": "Provenance block of the portfolio. concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license, plus optional keys only when there is something to say (field_sources, notices, derived/derivation_note, revision); detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
           },
           "showing": {
+            "description": "Geo units returned in this page",
             "type": "number"
           },
           "total_matches": {
+            "description": "Geo units matching the filters, across every page",
             "type": "number"
           }
         },
@@ -2623,18 +2636,22 @@
         "additionalProperties": {},
         "properties": {
           "attribution": {
+            "description": "Source URLs the figures came from (the provenance source_url of each block), for linking the citation",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "has_more": {
+            "description": "True when more matches remain after this page",
             "type": "boolean"
           },
           "hint": {
+            "description": "What to do next: how to narrow or page, or why nothing matched",
             "type": "string"
           },
           "indicators": {
+            "description": "Matching indicators, largest record count first; use code with uis_get_data",
             "items": {
               "additionalProperties": false,
               "properties": {
@@ -2686,9 +2703,11 @@
             "type": "array"
           },
           "next_offset": {
+            "description": "Offset for the next page; present only when has_more is true",
             "type": "number"
           },
           "offset": {
+            "description": "Results skipped before this page",
             "type": "number"
           },
           "provenance": {
@@ -3229,12 +3248,15 @@
             "description": "Provenance block of the portfolio. concise (default): source, source_url, data_vintage, retrieved_at, retrieval, citation, license, plus optional keys only when there is something to say (field_sources, notices, derived/derivation_note, revision); detailed: the full canonical block (dataset, dimension_key, notices, served_from_cache, ...). retrieval is the origin diagnostic of this call — requests made to the UIS Data API, attempts including retries, anomalies overcome (timeout, network, rate_limited, http_5xx, http_4xx, malformed_body) and unstable (true when anything had to be retried: treat the figures as obtained with difficulty); null when nothing was fetched from the UIS (catalogue or cached answer)"
           },
           "showing": {
+            "description": "Indicators returned in this page",
             "type": "number"
           },
           "total_matches": {
+            "description": "Indicators matching all terms, across every page",
             "type": "number"
           },
           "vocabulary_notes": {
+            "description": "Translations applied from everyday or US wording to UIS terms (e.g. enrollment → enrolment)",
             "items": {
               "type": "string"
             },

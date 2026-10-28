@@ -350,13 +350,16 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         provenance_mode: PROVENANCE_MODE_SCHEMA,
       }).strict(),
       outputSchema: z.looseObject({
-        total_matches: z.number(),
-        showing: z.number(),
-        offset: z.number(),
-        has_more: z.boolean(),
-        next_offset: z.number().optional(),
-        vocabulary_notes: z.array(z.string()).optional(),
-        hint: z.string().optional(),
+        total_matches: z.number().describe("Indicators matching all terms, across every page"),
+        showing: z.number().describe("Indicators returned in this page"),
+        offset: z.number().describe("Results skipped before this page"),
+        has_more: z.boolean().describe("True when more matches remain after this page"),
+        next_offset: z.number().optional().describe("Offset for the next page; present only when has_more is true"),
+        vocabulary_notes: z
+          .array(z.string())
+          .optional()
+          .describe("Translations applied from everyday or US wording to UIS terms (e.g. enrollment → enrolment)"),
+        hint: z.string().optional().describe("What to do next: how to narrow or page, or why nothing matched"),
         indicators: z.array(
           z.object({
             code: z.string(),
@@ -367,7 +370,7 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
             years: z.string().nullable(),
             geo_types: z.string().nullable(),
           }),
-        ),
+        ).describe("Matching indicators, largest record count first; use code with uis_get_data"),
         ...provenanceOutputShape(),
       }),
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
@@ -392,12 +395,14 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         provenance_mode: PROVENANCE_MODE_SCHEMA,
       }).strict(),
       outputSchema: z.looseObject({
-        total_matches: z.number(),
-        showing: z.number(),
-        offset: z.number(),
-        has_more: z.boolean(),
-        next_offset: z.number().optional(),
-        geo_units: z.array(z.object({ id: z.string(), name: z.string(), type: z.string() })),
+        total_matches: z.number().describe("Geo units matching the filters, across every page"),
+        showing: z.number().describe("Geo units returned in this page"),
+        offset: z.number().describe("Results skipped before this page"),
+        has_more: z.boolean().describe("True when more matches remain after this page"),
+        next_offset: z.number().optional().describe("Offset for the next page; present only when has_more is true"),
+        geo_units: z
+          .array(z.object({ id: z.string(), name: z.string(), type: z.string() }))
+          .describe("Geo units: id is the code for uis_get_data, type is NATIONAL or REGIONAL"),
         ...provenanceOutputShape(),
       }),
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
@@ -444,8 +449,8 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
         provenance_mode: PROVENANCE_MODE_SCHEMA,
       }).strict(),
       outputSchema: z.looseObject({
-        columns: z.array(z.string()),
-        rows_count: z.number(),
+        columns: z.array(z.string()).describe("Core fields of each row, in reading order"),
+        rows_count: z.number().describe("Number of records returned"),
         rows: z.array(
           z.looseObject({
             indicator: z.string(),
@@ -455,7 +460,7 @@ export function registerUisTools(server: McpServer, env: Env, record: RecordUsag
             magnitude: z.string().nullable(),
             qualifier: z.string().nullable(),
           }),
-        ),
+        ).describe("Raw UIS records, one per indicator, geo unit and year; value is untransformed"),
         ...provenanceOutputShape(),
       }),
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
