@@ -8,6 +8,17 @@ Registry; a superfície de cada versão está em `baselines/`.
 
 ## [Unreleased]
 
+## [1.8.1] — 2026-10-27
+
+### Corrigido
+
+- **Toda propriedade de primeiro nível dos `outputSchema` agora tem `description`.** Regra
+  nova do `mcpscore` 1.29 (`tools_output_properties_documented`): eram 22 sem descrição —
+  paginação e listas das três tools `uis_*` e o `attribution` do envelope de proveniência
+  (que é a lista dos `source_url` dos blocos, não um texto de crédito). Produção estava em
+  180/181 e o gate pós-deploy (piso 100) vermelho desde 27/10. Só descrição muda; nenhum
+  campo, tipo ou valor.
+
 ### Mudado
 
 - **Smoke pós-deploy: tool que falhou com a fonte de pé é chamada de novo antes de ser

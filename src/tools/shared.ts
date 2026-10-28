@@ -42,6 +42,8 @@ export function provenanceOutputShape() {
           "(true when anything had to be retried: treat the figures as obtained with difficulty); " +
           "null when nothing was fetched from the UIS (catalogue or cached answer)",
       ),
-    attribution: z.array(z.string()),
+    attribution: z
+      .array(z.string())
+      .describe("Source URLs the figures came from (the provenance source_url of each block), for linking the citation"),
   };
 }
