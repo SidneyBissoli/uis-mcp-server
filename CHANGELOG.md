@@ -8,7 +8,9 @@ Registry; a superfície de cada versão está em `baselines/`.
 
 ## [Unreleased]
 
-## [1.8.1] — 2026-10-27
+## [1.9.0] — 2026-10-27
+
+Renumerada de 1.8.1 (nunca publicada) para 1.9.0: a superfície publicada mudou (descrições no `outputSchema`), e pela convenção do repositório isso é versão minor.
 
 ### Corrigido
 
