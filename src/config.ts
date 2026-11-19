@@ -139,6 +139,12 @@ export const UIS_LIMITS = {
  */
 export const LANDING = {
   lang: "en" as "pt-BR" | "en",
+  /**
+   * `<title>` e `og:title` da landing: o nome do produto (`SERVER_CONFIG.title`,
+   * que não muda) mais o que ele entrega, em 50-60 caracteres. O Bing Webmaster
+   * acusou título curto no portfólio em 18/11/2026 ("UNESCO UIS Education Statistics MCP", 35).
+   */
+  pageTitle: "UNESCO UIS Education Statistics MCP — data for AI agents",
   resumo:
     "MCP server for the UNESCO Institute for Statistics: ~5,000 indicators on " +
     "education, science, culture and communication, by country, region and year.",
